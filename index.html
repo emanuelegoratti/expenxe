@@ -79,7 +79,7 @@ main{padding:14px max(16px,env(safe-area-inset-right,0px)) calc(110px + env(safe
 dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:640px;max-height:90vh;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 10px);background:var(--surface);color:var(--ink);border-radius:20px 20px 0 0}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 .sheet{display:flex;flex-direction:column;gap:14px;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-y:auto;max-height:90vh;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 10px);overscroll-behavior:contain}
-#f.sheet{padding-bottom:0}
+#f.sheet{padding-bottom:0;scroll-padding-bottom:96px;scroll-padding-top:64px}
 .sheeth{display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:3;background:var(--surface);padding:8px 0;margin-bottom:-6px}
 .sheeth .iconbtn{font-size:1.5rem;padding:8px 12px;margin-right:-8px}
 .sheeth h2{margin:0;font-size:1.1rem}
@@ -127,12 +127,12 @@ td.r,th.r{text-align:right}
 <header>
   <div class="hrow">
     <span class="brand">Expenxe</span>
-    <button class="iconbtn" id="b-set" aria-label="Impostazioni">⚙︎</button>
+    <button class="iconbtn" id="b-set" data-i18n-aria="settings" aria-label="Impostazioni">⚙︎</button>
   </div>
   <div class="month">
-    <button class="iconbtn" id="b-prev" aria-label="Mese precedente">‹</button>
+    <button class="iconbtn" id="b-prev" data-i18n-aria="prevMonth" aria-label="Mese precedente">‹</button>
     <span class="mlbl" id="m-lbl"></span>
-    <button class="iconbtn" id="b-next" aria-label="Mese successivo">›</button>
+    <button class="iconbtn" id="b-next" data-i18n-aria="nextMonth" aria-label="Mese successivo">›</button>
   </div>
   <div class="total"><span class="v" id="m-tot">0,00</span><span class="n" id="m-n"></span></div>
   <div class="split" id="m-split"></div>
@@ -141,46 +141,46 @@ td.r,th.r{text-align:right}
 <main id="list"></main>
 
 <div class="bar">
-  <button class="btn" id="b-report">Nota spese</button>
-  <button class="btn primary big" id="b-add">+ Spesa</button>
+  <button class="btn" id="b-report" data-i18n="report">Nota spese</button>
+  <button class="btn primary big" id="b-add" data-i18n="add">+ Spesa</button>
 </div>
 
 <!-- inserimento -->
 <dialog id="d-form" aria-labelledby="f-title">
   <form class="sheet" id="f" method="dialog" tabindex="-1">
     <div class="grab"></div>
-    <div class="sheeth"><h2 id="f-title">Nuova spesa</h2><button class="iconbtn" type="button" data-close aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div class="sheeth"><h2 id="f-title">Nuova spesa</h2><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
     <div>
-      <label class="lbl" for="f-amt">Importo</label>
+      <label class="lbl" for="f-amt" data-i18n="amount">Importo</label>
       <div class="amount">
         <input id="f-amt" inputmode="decimal" autocomplete="off" placeholder="0,00" required>
-        <select id="f-cur" aria-label="Valuta"></select>
+        <select id="f-cur" data-i18n-aria="currency" aria-label="Valuta"></select>
       </div>
     </div>
     <div>
-      <span class="lbl" id="f-cat-l">Voce del modello</span>
+      <span class="lbl" id="f-cat-l" data-i18n="category">Voce del modello</span>
       <div class="chips" id="f-cats" role="group" aria-labelledby="f-cat-l"></div>
     </div>
     <div class="row2">
-      <div class="field"><label class="lbl" for="f-date">Data</label><input type="date" id="f-date" required></div>
-      <div class="field"><label class="lbl" for="f-dest">Destinazione</label><input id="f-dest" list="dl-dest" autocomplete="off" placeholder="Città, cliente"></div>
+      <div class="field"><label class="lbl" for="f-date" data-i18n="date">Data</label><input type="date" id="f-date" required></div>
+      <div class="field"><label class="lbl" for="f-dest" data-i18n="dest">Destinazione</label><input id="f-dest" list="dl-dest" autocomplete="off" data-i18n-ph="destPh" placeholder="Città, cliente"></div>
     </div>
     <datalist id="dl-dest"></datalist>
-    <div class="field"><label class="lbl" for="f-note">Nota (facoltativa)</label><input id="f-note" autocomplete="off" placeholder="Es. pranzo con tecnico cliente"></div>
-    <div><span class="lbl" id="f-doc-l">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="fattura">Fattura</button><button type="button" data-doc="scontrino">Scontrino</button></div></div>
+    <div class="field"><label class="lbl" for="f-note" data-i18n="note">Nota (facoltativa)</label><input id="f-note" autocomplete="off" data-i18n-ph="notePh" placeholder="Es. pranzo con tecnico cliente"></div>
+    <div><span class="lbl" id="f-doc-l" data-i18n="doc">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="fattura" data-i18n="invoice">Fattura</button><button type="button" data-doc="scontrino" data-i18n="receipt">Scontrino</button></div></div>
     <div class="photo">
-      <img id="f-img" alt="Foto scontrino" hidden>
-      <label class="btn filebtn" id="f-photo-l">Foto documento<input type="file" id="f-photo" accept="image/*"></label>
-      <button class="btn" type="button" id="f-photo-del" hidden>Togli foto</button>
+      <img id="f-img" alt="" hidden>
+      <label class="btn filebtn" id="f-photo-l"><span data-i18n="photo">Foto documento</span><input type="file" id="f-photo" accept="image/*"></label>
+      <button class="btn" type="button" id="f-photo-del" hidden data-i18n="removePhoto">Togli foto</button>
     </div>
     <div class="msg" id="f-msg" role="status"></div>
     <div class="confirm" id="f-confirm" hidden>
-      <span>Eliminare questa spesa?</span>
-      <div class="actions"><button class="btn" type="button" id="f-del-no">Annulla</button><button class="btn danger" type="button" id="f-del-yes">Elimina</button></div>
+      <span data-i18n="confirmDel">Eliminare questa spesa?</span>
+      <div class="actions"><button class="btn" type="button" id="f-del-no" data-i18n="cancel">Annulla</button><button class="btn danger" type="button" id="f-del-yes" data-i18n="delete">Elimina</button></div>
     </div>
     <div class="actions savebar">
-      <button class="btn danger" type="button" id="f-del" hidden>Elimina</button>
-      <button class="btn primary" type="submit" id="f-save">Salva</button>
+      <button class="btn danger" type="button" id="f-del" hidden data-i18n="delete">Elimina</button>
+      <button class="btn primary" type="submit" id="f-save" data-i18n="save">Salva</button>
     </div>
   </form>
 </dialog>
@@ -189,17 +189,17 @@ td.r,th.r{text-align:right}
 <dialog id="d-rep" aria-labelledby="r-title">
   <div class="sheet">
     <div class="grab"></div>
-    <div class="sheeth"><h2 id="r-title">Nota spese</h2><button class="iconbtn" type="button" data-close aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div class="sheeth"><h2 id="r-title">Nota spese</h2><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
     <div id="r-body"></div>
     <div class="msg" id="r-msg" role="status"></div>
     <div class="actions">
-      <button class="btn primary" id="r-xlsx">Genera Invoice e Receipt</button>
-      <button class="btn" id="r-zip">Foto documenti (.zip)</button>
+      <button class="btn primary" id="r-xlsx" data-i18n="genFiles">Genera Invoice e Receipt</button>
+      <button class="btn" id="r-zip" data-i18n="zipPhotos">Foto documenti (.zip)</button>
     </div>
-    <div class="actions"><button class="btn danger" id="r-clear">Cancella mese…</button></div>
+    <div class="actions"><button class="btn danger" id="r-clear" data-i18n="clearMonth">Cancella mese…</button></div>
     <div class="confirm" id="r-confirm" hidden>
-      <span>Cancella dal telefono tutte le spese e le foto di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.</span>
-      <div class="actions"><button class="btn" id="r-clear-no">Annulla</button><button class="btn danger" id="r-clear-yes">Cancella il mese</button></div>
+      <span data-i18n="clearWarn">Cancella dal telefono tutte le spese e le foto di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.</span>
+      <div class="actions"><button class="btn" id="r-clear-no" data-i18n="cancel">Annulla</button><button class="btn danger" id="r-clear-yes" data-i18n="clearYes">Cancella il mese</button></div>
     </div>
   </div>
 </dialog>
@@ -208,20 +208,21 @@ td.r,th.r{text-align:right}
 <dialog id="d-set" aria-labelledby="s-title">
   <div class="sheet">
     <div class="grab"></div>
-    <div class="sheeth"><h2 id="s-title">Impostazioni</h2><button class="iconbtn" type="button" data-close aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
-    <div class="field"><label class="lbl" for="s-name">Nome e cognome</label><input id="s-name" autocomplete="name" placeholder="Come nel modello"></div>
+    <div class="sheeth"><h2 id="s-title" data-i18n="settings">Impostazioni</h2><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div><span class="lbl" id="s-lang-l" data-i18n="language">Lingua</span><div class="seg" id="s-lang" role="group" aria-labelledby="s-lang-l"><button type="button" data-lang="it">Italiano</button><button type="button" data-lang="en">English</button></div></div>
+    <div class="field"><label class="lbl" for="s-name" data-i18n="name">Nome e cognome</label><input id="s-name" autocomplete="name" data-i18n-ph="namePh" placeholder="Come nel modello"></div>
     <div>
-      <span class="lbl">Modello nota spese</span>
+      <span class="lbl" data-i18n="tplTitle">Modello nota spese</span>
       <p class="small muted" id="s-tpl" style="margin:0 0 8px"></p>
-      <label class="btn filebtn">Carica modello (.xlsx)<input type="file" id="s-tpl-in" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
+      <label class="btn filebtn"><span data-i18n="loadTpl">Carica modello (.xlsx)</span><input type="file" id="s-tpl-in" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
     </div>
     <div>
-      <span class="lbl">Backup</span>
-      <p class="small muted" style="margin:0 0 8px">Spese e foto sono salvate solo su questo telefono. Il backup è un file .zip con spese e foto: salvalo su iCloud Drive con «Salva su File».</p>
-      <div class="actions"><button class="btn" id="s-exp">Esporta backup</button><label class="btn filebtn">Importa backup<input type="file" id="s-imp" accept=".zip,.json,application/zip,application/json"></label></div>
+      <span class="lbl" data-i18n="backup">Backup</span>
+      <p class="small muted" style="margin:0 0 8px" data-i18n="backupInfo">Spese e foto sono salvate solo su questo telefono. Il backup è un file .zip con spese e foto: salvalo su iCloud Drive con «Salva su File».</p>
+      <div class="actions"><button class="btn" id="s-exp" data-i18n="exportBk">Esporta backup</button><label class="btn filebtn"><span data-i18n="importBk">Importa backup</span><input type="file" id="s-imp" accept=".zip,.json,application/zip,application/json"></label></div>
     </div>
     <div class="msg" id="s-msg" role="status"></div>
-    <p class="small muted" style="margin:0">Expenxe · funziona offline · nessun dato lascia il telefono</p>
+    <p class="small muted" style="margin:0" data-i18n="footer">Expenxe · funziona offline · nessun dato lascia il telefono</p>
   </div>
 </dialog>
 
@@ -229,28 +230,95 @@ td.r,th.r{text-align:right}
 <script>
 "use strict";
 /* ---------- voci del modello Estun: colonne G..U del foglio DATA ---------- */
-const COLS=[["O","Pasto personale"],["L","Carburante"],["M","Pedaggi, vignetta"],["N","Parcheggio"],["H","Hotel (camera)"],["G","Volo o treno"],
-  ["Q","Pasto con inviti"],["P","Pasto, inviti di servizio"],["S","Taxi"],["U","Cancelleria, materiali"],["K","Noleggio auto"],["T","Cibo per l'ufficio"],
-  ["R","Regali a clienti"],["J","Auto: lavaggio, ricambi"],["I","Cibo in fattura hotel"]];
-const COLNAME=Object.fromEntries(COLS);
+const COLS3=[["O","Pasto personale","Food & drink (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
+  ["Q","Pasto con inviti","Food & drink (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
+  ["R","Regali a clienti","Gifts to customers"],["J","Auto: lavaggio, ricambi","Car wash, small parts"],["I","Cibo in fattura hotel","Food on hotel invoice"]];
+const colName=k=>{const c=COLS3.find(x=>x[0]===k);return c?(lang==="it"?c[1]:c[2]):k};
+const COLS_KEYS=COLS3.map(c=>c[0]);
 const CURRENCIES=["EUR","CHF","USD","GBP","PLN","CZK","HUF","RON","SEK","DKK","NOK","BGN","RSD","JPY","UAH"];
 
 /* ---------- utilità ---------- */
 const $=s=>document.querySelector(s);
+/* ---------- lingua ---------- */
+const I18N={
+it:{settings:"Impostazioni",prevMonth:"Mese precedente",nextMonth:"Mese successivo",report:"Nota spese",add:"+ Spesa",newExp:"Nuova spesa",editExp:"Modifica spesa",close:"Chiudi",
+amount:"Importo",currency:"Valuta",category:"Voce del modello",date:"Data",dest:"Destinazione",destPh:"Città, cliente",note:"Nota (facoltativa)",notePh:"Es. pranzo con tecnico cliente",
+doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Foto documento",removePhoto:"Togli foto",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",delete:"Elimina",save:"Salva",
+genFiles:"Genera Invoice e Receipt",zipPhotos:"Foto documenti (.zip)",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
+clearWarn:"Cancella dal telefono tutte le spese e le foto di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.",
+language:"Lingua",name:"Nome e cognome",namePh:"Come nel modello",tplTitle:"Modello nota spese",loadTpl:"Carica modello (.xlsx)",backup:"Backup",
+backupInfo:"Spese e foto sono salvate solo su questo telefono. Il backup è un file .zip con spese e foto: salvalo su iCloud Drive con «Salva su File».",
+exportBk:"Esporta backup",importBk:"Importa backup",footer:"Expenxe · funziona offline · nessun dato lascia il telefono",
+storageErr:"Il browser non permette di salvare dati. Apri l'app da Safari, non in navigazione privata.",
+invoices:"Fatture",receipts:"Scontrini",exp1:"spesa",expN:"spese",inFx:"in valuta",
+bkNotice1:"{n} spesa non è ancora nel backup.",bkNoticeN:"{n} spese non sono ancora nel backup.",saveBk:"Salva backup",
+tplNotice:"Carica una volta il modello nota spese Estun per poter generare il file a fine mese.",loadTplShort:"Carica modello",
+emptyMonth:"Nessuna spesa in {m}.<br>Tocca <b>+ Spesa</b> quando paghi: importo, voce, fatto.",moreCats:"Altre {n} voci",
+errAmount:"Scrivi un importo, ad esempio 14,80.",errCat:"Scegli la voce del modello.",errDate:"Scegli la data.",
+errSave:"Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup dalle impostazioni.",errPhoto:"Questa foto non si riesce ad aprire.",
+warnFx:"Il giorno {d} ha spese in valute diverse ({c}): il modello ha una sola valuta per giorno, correggi a mano.",
+warnCells:"Alcune celle non sono state trovate: controlla che il modello caricato sia quello giusto.",
+kindInvoice:"Invoice · fatture",kindReceipt:"Receipt · scontrini",reportTitle:"Nota spese · {m}",totEur:"Totale €",plusFx:"+ {n} in valuta",monthTot:"Totale del mese",
+noTpl:"Prima carica il modello nota spese dalle impostazioni (⚙︎).",building:"Compilo i modelli…",ready:"Pronti: {f}",and:" e ",
+errBuild:"Non riesco a compilare il modello: {e}.",badFile:"file non valido",noData:"manca il foglio DATA",
+prepPhotos:"Preparo le foto…",noPhotos:"Nessuna foto salvata per questo mese.",photosReady:"Foto pronte: {f}.",missPhotos:" Senza foto: {l}.",errPhotos:"Non riesco a preparare le foto.",
+tplLoaded:"Caricato: {n}. Ricaricalo solo se l'amministrazione cambia il modello.",tplNone:"Nessun modello caricato. Usa il file di un mese qualsiasi: le righe dei giorni vengono svuotate ogni volta.",
+tplSaved:"Modello salvato sul telefono.",tplBad:"Questo file non è il modello nota spese (manca il foglio DATA).",
+bkReady:"Backup pronto: salvalo su iCloud Drive.",bkErr:"Non riesco a creare il backup.",
+imported:"Importate {n} spese{p}. Quelle già presenti sono state lasciate com'erano.",importedPh:" e {n} foto",bkBad:"Questo file non è un backup di Expenxe."},
+en:{settings:"Settings",prevMonth:"Previous month",nextMonth:"Next month",report:"Expense report",add:"+ Expense",newExp:"New expense",editExp:"Edit expense",close:"Close",
+amount:"Amount",currency:"Currency",category:"Template category",date:"Date",dest:"Destination",destPh:"Town, company",note:"Note (optional)",notePh:"E.g. lunch with customer technician",
+doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Document photo",removePhoto:"Remove photo",confirmDel:"Delete this expense?",cancel:"Cancel",delete:"Delete",save:"Save",
+genFiles:"Create Invoice and Receipt",zipPhotos:"Document photos (.zip)",clearMonth:"Delete month…",clearYes:"Delete the month",
+clearWarn:"Deletes all expenses and photos of this month from the phone, with no way to recover them. Not needed to free up space: do it only if you really want them gone.",
+language:"Language",name:"Full name",namePh:"As in the template",tplTitle:"Expense template",loadTpl:"Load template (.xlsx)",backup:"Backup",
+backupInfo:"Expenses and photos are stored only on this phone. The backup is a .zip file with expenses and photos: save it to iCloud Drive with “Save to Files”.",
+exportBk:"Export backup",importBk:"Import backup",footer:"Expenxe · works offline · no data leaves the phone",
+storageErr:"This browser does not allow saving data. Open the app from Safari, not in private browsing.",
+invoices:"Invoices",receipts:"Receipts",exp1:"expense",expN:"expenses",inFx:"in foreign currency",
+bkNotice1:"{n} expense is not backed up yet.",bkNoticeN:"{n} expenses are not backed up yet.",saveBk:"Back up now",
+tplNotice:"Load the Estun expense template once to create the files at month end.",loadTplShort:"Load template",
+emptyMonth:"No expenses in {m}.<br>Tap <b>+ Expense</b> when you pay: amount, category, done.",moreCats:"{n} more categories",
+errAmount:"Enter an amount, e.g. 14.80.",errCat:"Choose the template category.",errDate:"Choose the date.",
+errSave:"Saving failed. Try again; if it keeps failing, export a backup from settings.",errPhoto:"This photo cannot be opened.",
+warnFx:"Day {d} has expenses in different currencies ({c}): the template has one currency per day, fix it by hand.",
+warnCells:"Some cells were not found: check that the loaded template is the right one.",
+kindInvoice:"Invoice",kindReceipt:"Receipt",reportTitle:"Expense report · {m}",totEur:"Total €",plusFx:"+ {n} in foreign currency",monthTot:"Month total",
+noTpl:"Load the expense template in settings (⚙︎) first.",building:"Filling in the templates…",ready:"Ready: {f}",and:" and ",
+errBuild:"Could not fill in the template: {e}.",badFile:"invalid file",noData:"the DATA sheet is missing",
+prepPhotos:"Preparing photos…",noPhotos:"No photos saved for this month.",photosReady:"Photos ready: {f}.",missPhotos:" Missing photos: {l}.",errPhotos:"Could not prepare the photos.",
+tplLoaded:"Loaded: {n}. Reload it only if the template changes.",tplNone:"No template loaded. Use the file of any month: the day rows are cleared every time.",
+tplSaved:"Template saved on the phone.",tplBad:"This file is not the expense template (the DATA sheet is missing).",
+bkReady:"Backup ready: save it to iCloud Drive.",bkErr:"Could not create the backup.",
+imported:"Imported {n} expenses{p}. Existing ones were left unchanged.",importedPh:" and {n} photos",bkBad:"This file is not an Expenxe backup."}
+};
+let lang=(()=>{try{const v=localStorage.getItem("expenxe.lang");if(v==="it"||v==="en")return v}catch(_){}return /^it/i.test(navigator.language||"it")?"it":"en"})();
+const t=(k,v={})=>String(I18N[lang][k]??I18N.it[k]??k).replace(/\{(\w+)\}/g,(m,x)=>v[x]??"");
+const LOC=()=>lang==="it"?"it-IT":"en-GB";
+function applyStatic(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=t(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>el.placeholder=t(el.dataset.i18nPh));
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>el.setAttribute("aria-label",t(el.dataset.i18nAria)));
+  $("#f-amt").placeholder=lang==="it"?"0,00":"0.00";
+  document.querySelectorAll("#s-lang button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang)));
+}
+
 const pad=n=>String(n).padStart(2,"0");
 const isoOf=(y,m,d)=>y+"-"+pad(m)+"-"+pad(d);
 const todayISO=()=>{const d=new Date();return isoOf(d.getFullYear(),d.getMonth()+1,d.getDate())};
-const fmt=n=>Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt=n=>Number(n||0).toLocaleString(LOC(),{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function parseAmount(v){
   let s=String(v||"").trim().replace(/[€\s]/g,""); if(!s)return null;
+  if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s))s=s.replace(/,/g,"");
   const lc=s.lastIndexOf(","),ld=s.lastIndexOf(".");
   if(lc>ld)s=s.replace(/\./g,"").replace(",",".");else if(ld>lc&&lc>-1)s=s.replace(/,/g,"");
   const n=Number(s); return isFinite(n)&&n>0?Math.round(n*100)/100:null;
 }
-const monthLabel=m=>{const [y,mo]=m.split("-").map(Number);return new Date(y,mo-1,1).toLocaleDateString("it-IT",{month:"long",year:"numeric"})};
-const dayLabel=iso=>{const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})};
+const monthLabel=m=>{const [y,mo]=m.split("-").map(Number);return new Date(y,mo-1,1).toLocaleDateString(LOC(),{month:"long",year:"numeric"})};
+const dayLabel=iso=>{const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString(LOC(),{weekday:"short",day:"numeric",month:"short"})};
 const shiftMonth=(m,k)=>{let [y,mo]=m.split("-").map(Number);mo+=k;while(mo<1){mo+=12;y--}while(mo>12){mo-=12;y++}return y+"-"+pad(mo)};
 
 /* ---------- IndexedDB ---------- */
@@ -277,10 +345,11 @@ let lastSaved=null;
 let spese=[], month=todayISO().slice(0,7), cfg={name:"",lastDest:"",lastCur:"EUR",catUse:{}}, editing=null, photoBlob=undefined, persistAsked=false;
 
 async function boot(){
+  applyStatic();
   try{
     spese=await getAll();
     for(const k of ["name","lastDest","lastCur","lastCurDate","catUse","docByCol","lastBackupAt"]){const v=await getCfg(k);if(v!==undefined)cfg[k]=v}
-  }catch(e){ $("#list").innerHTML='<div class="empty">Il browser non permette di salvare dati. Apri l\'app da Safari, non in navigazione privata.</div>';return }
+  }catch(e){ $("#list").innerHTML='<div class="empty">'+esc(t("storageErr"))+'</div>';return }
   render();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
@@ -294,22 +363,22 @@ async function render(){
   const fx=items.filter(s=>s.currency!=="EUR").length;
   $("#m-tot").textContent="€ "+fmt(eur);
   const sumDoc=f=>items.filter(s=>s.currency==="EUR"&&f(docOf(s))).reduce((t,s)=>t+s.amount,0);
-  $("#m-split").innerHTML=items.length?'<span>Fatture<b>'+fmt(sumDoc(d=>d==="fattura"))+'</b></span><span>Scontrini<b>'+fmt(sumDoc(d=>d==="scontrino"))+'</b></span>':"";
-  $("#m-n").textContent=items.length?(items.length+(items.length===1?" spesa":" spese")+(fx?" · "+fx+" in valuta":"")):"";
+  $("#m-split").innerHTML=items.length?'<span>'+t("invoices")+'<b>'+fmt(sumDoc(d=>d==="fattura"))+'</b></span><span>'+t("receipts")+'<b>'+fmt(sumDoc(d=>d==="scontrino"))+'</b></span>':"";
+  $("#m-n").textContent=items.length?(items.length+" "+(items.length===1?t("exp1"):t("expN"))+(fx?" · "+fx+" "+t("inFx"):"")):"";
   const tpl=await getCfg("template");
   let html="";
   const unsaved=spese.filter(x=>(x.updated||x.created||0)>(cfg.lastBackupAt||0));
   const oldest=unsaved.length?Math.min(...unsaved.map(x=>x.updated||x.created||Date.now())):0;
-  if(unsaved.length&&Date.now()-oldest>7*864e5)html+='<div class="notice"><span>'+unsaved.length+(unsaved.length===1?' spesa non è':' spese non sono')+' ancora nel backup.</span><button class="btn" id="n-bk">Salva backup</button></div>';
-  if(!tpl)html+='<div class="notice"><span>Carica una volta il modello nota spese Estun per poter generare il file a fine mese.</span><button class="btn" id="n-tpl">Carica modello</button></div>';
-  if(!items.length)html+='<div class="empty">Nessuna spesa in '+esc(monthLabel(month))+'.<br>Tocca <b>+ Spesa</b> quando paghi: importo, voce, fatto.</div>';
+  if(unsaved.length&&Date.now()-oldest>7*864e5)html+='<div class="notice"><span>'+t(unsaved.length===1?"bkNotice1":"bkNoticeN",{n:unsaved.length})+'</span><button class="btn" id="n-bk">'+t("saveBk")+'</button></div>';
+  if(!tpl)html+='<div class="notice"><span>'+t("tplNotice")+'</span><button class="btn" id="n-tpl">'+t("loadTplShort")+'</button></div>';
+  if(!items.length)html+='<div class="empty">'+t("emptyMonth",{m:esc(monthLabel(month))})+'</div>';
   const byDay={};items.forEach(s=>(byDay[s.date]=byDay[s.date]||[]).push(s));
   for(const d of Object.keys(byDay).sort().reverse()){
     const list=byDay[d]; const sums={};list.forEach(s=>{sums[s.currency]=(sums[s.currency]||0)+s.amount});
     const dt=Object.keys(sums).sort((a,b)=>a==="EUR"?-1:b==="EUR"?1:0).map(c=>(c==="EUR"?"":c+" ")+fmt(sums[c])).join(" + ");
     html+='<section class="day"><div class="dayh"><span>'+esc(dayLabel(d))+'</span><span class="num">'+dt+'</span></div>'+
-      list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(COLNAME[s.col]||s.col)+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
-        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(docOf(s)==="fattura"?"Fattura":"Scontrino")+'</span>'+'</span></button>').join("")+'</section>';
+      list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(colName(s.col))+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
+        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+t(docOf(s)==="fattura"?"invoice":"receipt")+'</span>'+'</span></button>').join("")+'</section>';
   }
   $("#list").innerHTML=html;
   $("#b-report").disabled=!items.length;
@@ -322,12 +391,12 @@ $("#b-next").onclick=()=>{month=shiftMonth(month,1);render()};
 
 /* ---------- form ---------- */
 $("#f-cur").innerHTML=CURRENCIES.map(c=>'<option>'+c+'</option>').join("");
-function catOrder(){return [...COLS].sort((a,b)=>(cfg.catUse[b[0]]||0)-(cfg.catUse[a[0]]||0))}
+function catOrder(){return COLS_KEYS.map(k=>[k,colName(k)]).sort((a,b)=>(cfg.catUse[b[0]]||0)-(cfg.catUse[a[0]]||0))}
 function renderCats(sel,all){
   const ord=catOrder(); const showN=all?ord.length:8;
   let list=ord.slice(0,showN); if(sel&&!list.some(c=>c[0]===sel))list.push(ord.find(c=>c[0]===sel));
   $("#f-cats").innerHTML=list.map(([k,n])=>'<button type="button" class="chip" data-col="'+k+'" aria-pressed="'+(k===sel)+'"><i>'+k+'</i>'+esc(n)+'</button>').join("")+
-    (list.length<ord.length?'<button type="button" class="more" id="f-more">Altre '+(ord.length-list.length)+' voci</button>':'');
+    (list.length<ord.length?'<button type="button" class="more" id="f-more">'+t("moreCats",{n:ord.length-list.length})+'</button>':'');
 }
 $("#f-cats").addEventListener("click",e=>{if(e.target.closest("#f-more")){renderCats(selectedCol(),true);return}
   const c=e.target.closest(".chip");if(!c)return;
@@ -341,7 +410,7 @@ let docTouched=false;
 function selectedCol(){const c=$("#f-cats").querySelector('[aria-pressed="true"]');return c?c.dataset.col:null}
 async function openForm(s){
   editing=s||null; photoBlob=undefined; docTouched=false;
-  $("#f-title").textContent=s?"Modifica spesa":"Nuova spesa";
+  $("#f-title").textContent=t(s?"editExp":"newExp");
   $("#f-amt").value=s?fmt(s.amount):"";
   $("#f-cur").value=s?s.currency:((cfg.lastCurDate&&Math.abs(Date.parse(todayISO())-Date.parse(cfg.lastCurDate))<=2*864e5)?(cfg.lastCur||"EUR"):"EUR");
   $("#f-date").value=s?s.date:todayISO();
@@ -361,9 +430,9 @@ $("#b-add").onclick=()=>openForm(null);
 $("#f").addEventListener("submit",async e=>{
   e.preventDefault();
   const amount=parseAmount($("#f-amt").value);
-  if(amount==null){setMsg("#f-msg","Scrivi un importo, ad esempio 14,80.","err");$("#f-amt").focus();return}
-  const col=selectedCol(); if(!col){setMsg("#f-msg","Scegli la voce del modello.","err");return}
-  const date=$("#f-date").value; if(!date){setMsg("#f-msg","Scegli la data.","err");return}
+  if(amount==null){setMsg("#f-msg",t("errAmount"),"err");$("#f-amt").focus();return}
+  const col=selectedCol(); if(!col){setMsg("#f-msg",t("errCat"),"err");return}
+  const date=$("#f-date").value; if(!date){setMsg("#f-msg",t("errDate"),"err");return}
   const o=editing?{...editing}:{id:uid(),created:Date.now()};o.updated=Date.now();
   Object.assign(o,{amount,currency:$("#f-cur").value,col,date,dest:$("#f-dest").value.trim(),note:$("#f-note").value.trim(),doc:currentDoc()});delete o.receipt;
   cfg.docByCol=cfg.docByCol||{};cfg.docByCol[col]=o.doc;setCfg("docByCol",cfg.docByCol).catch(()=>{});
@@ -378,12 +447,12 @@ $("#f").addEventListener("submit",async e=>{
     const i=spese.findIndex(x=>x.id===o.id); if(i>-1)spese[i]=o; else spese.push(o);
     if(!persistAsked&&navigator.storage&&navigator.storage.persist){persistAsked=true;navigator.storage.persist().catch(()=>{})}
     $("#d-form").close(); if(o.date.slice(0,7)!==month)month=o.date.slice(0,7); render();
-  }catch(err){setMsg("#f-msg","Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup dalle impostazioni.","err")}
+  }catch(err){setMsg("#f-msg",t("errSave"),"err")}
 });
 $("#f-photo").addEventListener("change",async e=>{
   const f=e.target.files[0];e.target.value="";if(!f)return;
   try{photoBlob=await shrink(f);const img=$("#f-img");img.src=URL.createObjectURL(photoBlob);img.hidden=false;$("#f-photo-del").hidden=false}
-  catch(_){setMsg("#f-msg","Questa foto non si riesce ad aprire.","err")}
+  catch(_){setMsg("#f-msg",t("errPhoto"),"err")}
 });
 $("#f-photo-del").onclick=()=>{photoBlob=null;$("#f-img").hidden=true;$("#f-photo-del").hidden=true};
 $("#f-del").onclick=()=>{$("#f-confirm").hidden=false};
@@ -428,7 +497,7 @@ function fillSheetXml(xml,rows,opt){
   for(const d of Object.keys(byDay)){
     const list=byDay[d];const rr=6+Number(d);
     const curs=[...new Set(list.map(x=>x.currency||"EUR"))];
-    if(curs.length>1)warn.push("Il giorno "+d+" ha spese in valute diverse ("+curs.join(", ")+"): il modello ha una sola valuta per giorno, correggi a mano.");
+    if(curs.length>1)warn.push(t("warnFx",{d,c:curs.join(", ")}));
     put("D"+rr,curs[0]);
     const dests=[...new Set(list.map(x=>[(x.dest||"").trim(),(x.note||"").trim()].filter(Boolean).join(" ")).filter(Boolean))];
     put("B"+rr,dests.join(", "));
@@ -436,29 +505,29 @@ function fillSheetXml(xml,rows,opt){
     const sums={};list.forEach(x=>{sums[x.col]=(sums[x.col]||0)+x.amount});
     for(const c of Object.keys(sums))put(c+rr,Math.round(sums[c]*100)/100);
   }
-  if(miss)warn.push("Alcune celle non sono state trovate: controlla che il modello caricato sia quello giusto.");
+  if(miss)warn.push(t("warnCells"));
   return {xml,warn};
 }
 /*TEMPLATE-END*/
 
 /* ---------- report: due file, Invoice (fatture) e Receipt (scontrini) ---------- */
-const KINDS=[{key:"Invoice",label:"Invoice · fatture",test:s=>docOf(s)==="fattura"},{key:"Receipt",label:"Receipt · scontrini",test:s=>docOf(s)==="scontrino"}];
+const KINDS=[{key:"Invoice",lk:"kindInvoice",test:s=>docOf(s)==="fattura"},{key:"Receipt",lk:"kindReceipt",test:s=>docOf(s)==="scontrino"}];
 function numbered(m,kind){return monthItems(m).filter(kind.test).map((s,i)=>({...s,doc:docOf(s),n:i+1}))}
 function summary(rows){
   const eur=rows.filter(r=>r.currency==="EUR");const by={};eur.forEach(r=>{by[r.col]=by[r.col]||{n:0,t:0};by[r.col].n++;by[r.col].t+=r.amount});
   return {by,tot:eur.reduce((t,r)=>t+r.amount,0),fx:rows.length-eur.length};
 }
 function openReport(){
-  $("#r-title").textContent="Nota spese · "+monthLabel(month);
+  $("#r-title").textContent=t("reportTitle",{m:monthLabel(month)});
   let html="",grand=0;
   for(const k of KINDS){
     const rows=numbered(month,k); if(!rows.length)continue;
     const sm=summary(rows); grand+=sm.tot;
-    html+='<h3 style="margin:10px 0 4px;font-size:1rem">'+esc(k.label)+' <span class="muted small">'+rows.length+(rows.length===1?" spesa":" spese")+'</span></h3>'+
-      '<table><tbody>'+"GHIJKLMNOPQRSTU".split("").filter(c=>sm.by[c]).map(c=>'<tr><td class="num" style="width:2em">'+c+'</td><td>'+esc(COLNAME[c])+'</td><td class="r num">'+sm.by[c].n+'</td><td class="r num">'+fmt(sm.by[c].t)+'</td></tr>').join("")+
-      '<tr><td></td><td><b>Totale €</b>'+(sm.fx?' <span class="small" style="color:var(--warn)">+ '+sm.fx+' in valuta</span>':'')+'</td><td></td><td class="r num"><b>'+fmt(sm.tot)+'</b></td></tr></tbody></table>';
+    html+='<h3 style="margin:10px 0 4px;font-size:1rem">'+esc(t(k.lk))+' <span class="muted small">'+rows.length+" "+(rows.length===1?t("exp1"):t("expN"))+'</span></h3>'+
+      '<table><tbody>'+"GHIJKLMNOPQRSTU".split("").filter(c=>sm.by[c]).map(c=>'<tr><td class="num" style="width:2em">'+c+'</td><td>'+esc(colName(c))+'</td><td class="r num">'+sm.by[c].n+'</td><td class="r num">'+fmt(sm.by[c].t)+'</td></tr>').join("")+
+      '<tr><td></td><td><b>'+t("totEur")+'</b>'+(sm.fx?' <span class="small" style="color:var(--warn)">'+t("plusFx",{n:sm.fx})+'</span>':'')+'</td><td></td><td class="r num"><b>'+fmt(sm.tot)+'</b></td></tr></tbody></table>';
   }
-  html+='<div class="tot"><span><b>Totale del mese</b></span><span class="v">€ '+fmt(grand)+'</span></div>';
+  html+='<div class="tot"><span><b>'+t("monthTot")+'</b></span><span class="v">€ '+fmt(grand)+'</span></div>';
   $("#r-body").innerHTML=html;
   $("#r-zip").disabled=!monthItems(month).some(r=>r.photo);
   $("#r-confirm").hidden=true; setMsg("#r-msg","");
@@ -487,7 +556,7 @@ async function buildFile(tpl,rows){
   const zip=await JSZip.loadAsync(tpl);
   const wb=await zip.file("xl/workbook.xml").async("string");
   const rels=await zip.file("xl/_rels/workbook.xml.rels").async("string");
-  const sm=wb.match(/<sheet [^>]*name="DATA"[^>]*r:id="([^"]+)"/);if(!sm)throw new Error("manca il foglio DATA");
+  const sm=wb.match(/<sheet [^>]*name="DATA"[^>]*r:id="([^"]+)"/);if(!sm)throw new Error(t("noData"));
   const tm=rels.match(new RegExp('<Relationship [^>]*Id="'+sm[1]+'"[^>]*Target="([^"]+)"'))||rels.match(new RegExp('<Relationship [^>]*Target="([^"]+)"[^>]*Id="'+sm[1]+'"'));
   const path="xl/"+tm[1].replace(/^\/?xl\//,"");
   const res=fillSheetXml(await zip.file(path).async("string"),rows,{employee:cfg.name,month,today:todayISO()});
@@ -497,19 +566,19 @@ async function buildFile(tpl,rows){
 }
 $("#r-xlsx").onclick=async()=>{
   const tpl=await getCfg("template");
-  if(!tpl){setMsg("#r-msg","Prima carica il modello nota spese dalle impostazioni (⚙︎).","err");return}
+  if(!tpl){setMsg("#r-msg",t("noTpl"),"err");return}
   try{
-    setMsg("#r-msg","Compilo i modelli…");
+    setMsg("#r-msg",t("building"));
     const out=[],warn=[];
     for(const k of KINDS){const rows=numbered(month,k);if(!rows.length)continue;
       const f=await buildFile(tpl,rows);out.push({blob:f.blob,name:fileName(k.key),type:XLSX_TYPE});f.warn.forEach(w=>warn.push(k.key+": "+w))}
     const r=await deliverMany(out);
-    setMsg("#r-msg",warn.length?warn.join(" "):(r==="cancel"?"":"Pronti: "+out.map(o=>o.name).join(" e ")),warn.length?"warn":"");
-  }catch(e){setMsg("#r-msg","Non riesco a compilare il modello: "+(e.message||"file non valido")+".","err")}
+    setMsg("#r-msg",warn.length?warn.join(" "):(r==="cancel"?"":t("ready",{f:out.map(o=>o.name).join(t("and"))})),warn.length?"warn":"");
+  }catch(e){setMsg("#r-msg",t("errBuild",{e:e.message||t("badFile")}),"err")}
 };
 $("#r-zip").onclick=async()=>{
   try{
-    setMsg("#r-msg","Preparo le foto…");
+    setMsg("#r-msg",t("prepPhotos"));
     const out=[],missing=[];
     for(const k of KINDS){
       const rows=numbered(month,k); if(!rows.length)continue;
@@ -520,11 +589,11 @@ $("#r-zip").onclick=async()=>{
       }
       if(n)out.push({blob:await zip.generateAsync({type:"blob"}),name:fileName(k.key).replace(/\.xlsx$/,".zip"),type:"application/zip"});
     }
-    if(!out.length){setMsg("#r-msg","Nessuna foto salvata per questo mese.","warn");return}
+    if(!out.length){setMsg("#r-msg",t("noPhotos"),"warn");return}
     const r=await deliverMany(out);
-    const miss=missing.length?" Senza foto: "+missing.join(", ")+".":"";
-    setMsg("#r-msg",(r==="cancel"?"":"Foto pronte: "+out.map(o=>o.name).join(" e ")+".")+miss,missing.length?"warn":"");
-  }catch(e){setMsg("#r-msg","Non riesco a preparare le foto.","err")}
+    const miss=missing.length?t("missPhotos",{l:missing.join(", ")}):"";
+    setMsg("#r-msg",(r==="cancel"?"":t("photosReady",{f:out.map(o=>o.name).join(t("and"))}))+miss,missing.length?"warn":"");
+  }catch(e){setMsg("#r-msg",t("errPhotos"),"err")}
 };
 $("#r-clear").onclick=()=>{$("#r-confirm").hidden=false};
 $("#r-clear-no").onclick=()=>{$("#r-confirm").hidden=true};
@@ -536,21 +605,24 @@ $("#r-clear-yes").onclick=async()=>{
 /* ---------- impostazioni ---------- */
 async function refreshTplText(){
   const tpl=await getCfg("template"),tn=await getCfg("templateName");
-  $("#s-tpl").textContent=tpl?("Caricato: "+(tn||"modello.xlsx")+". Ricaricalo solo se l'amministrazione cambia il modello."):"Nessun modello caricato. Usa il file di un mese qualsiasi: le righe dei giorni vengono svuotate ogni volta.";
+  $("#s-tpl").textContent=tpl?t("tplLoaded",{n:tn||"modello.xlsx"}):t("tplNone");
 }
 async function openSettings(){
   $("#s-name").value=cfg.name||"";await refreshTplText();
   setMsg("#s-msg","");if(!$("#d-set").open)$("#d-set").showModal();
 }
 $("#b-set").onclick=openSettings;
+$("#s-lang").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b||b.dataset.lang===lang)return;
+  lang=b.dataset.lang;try{localStorage.setItem("expenxe.lang",lang)}catch(_){}
+  applyStatic();await refreshTplText();setMsg("#s-msg","");render()});
 $("#s-name").addEventListener("change",async e=>{cfg.name=e.target.value.trim();await setCfg("name",cfg.name)});
 $("#s-tpl-in").addEventListener("change",async e=>{
   const f=e.target.files[0];e.target.value="";if(!f)return;
   try{const buf=await f.arrayBuffer();const z=await JSZip.loadAsync(buf);const wb=await z.file("xl/workbook.xml").async("string");
     if(!/name="DATA"/.test(wb))throw 0;
     await setCfg("template",buf);await setCfg("templateName",f.name);
-    await refreshTplText();setMsg("#s-msg","Modello salvato sul telefono.");render()}
-  catch(_){setMsg("#s-msg","Questo file non è il modello nota spese (manca il foglio DATA).","err")}
+    await refreshTplText();setMsg("#s-msg",t("tplSaved"));render()}
+  catch(_){setMsg("#s-msg",t("tplBad"),"err")}
 });
 async function exportBackup(msgSel){
   try{
@@ -560,8 +632,8 @@ async function exportBackup(msgSel){
     const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE"});
     const r=await deliver(blob,"Expenxe_backup_"+todayISO()+".zip","application/zip");
     if(r!=="cancel"){cfg.lastBackupAt=Date.now();await setCfg("lastBackupAt",cfg.lastBackupAt);render()}
-    if(msgSel)setMsg(msgSel,r==="cancel"?"":"Backup pronto: salvalo su iCloud Drive.");
-  }catch(e){if(msgSel)setMsg(msgSel,"Non riesco a creare il backup.","err")}
+    if(msgSel)setMsg(msgSel,r==="cancel"?"":t("bkReady"));
+  }catch(e){if(msgSel)setMsg(msgSel,t("bkErr"),"err")}
 }
 $("#s-exp").onclick=()=>exportBackup("#s-msg");
 $("#s-imp").addEventListener("change",async e=>{
@@ -581,8 +653,8 @@ $("#s-imp").addEventListener("change",async e=>{
       await putSpesa(x);spese.push(x);n++;
     }
     cfg.lastBackupAt=Date.now();await setCfg("lastBackupAt",cfg.lastBackupAt);
-    setMsg("#s-msg","Importate "+n+" spese"+(ph?" e "+ph+" foto":"")+". Quelle già presenti sono state lasciate com'erano.");render()}
-  catch(_){setMsg("#s-msg","Questo file non è un backup di Expenxe.","err")}
+    setMsg("#s-msg",t("imported",{n,p:ph?t("importedPh",{n:ph}):""}));render()}
+  catch(_){setMsg("#s-msg",t("bkBad"),"err")}
 });
 
 boot();
