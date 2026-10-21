@@ -58,6 +58,9 @@ main{padding:14px max(16px,env(safe-area-inset-right,0px)) calc(110px + env(safe
 .item .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .item .t>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:.86rem}
 .item .a{font-family:var(--f-num);font-weight:600;text-align:right}
+.item .a .doc{display:block;margin-top:3px;font-family:var(--f-body);font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.item .a .doc.fattura{color:var(--accent)}
+.item .a .doc.scontrino{color:var(--muted)}
 .item .a small{display:block;font-weight:400;color:var(--warn);font-size:.72rem;font-family:var(--f-body)}
 .empty{text-align:center;color:var(--muted);padding:40px 16px;border:1px dashed var(--line);border-radius:var(--r)}
 .notice{background:var(--warn-soft);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -193,9 +196,9 @@ td.r,th.r{text-align:right}
       <button class="btn primary" id="r-xlsx">Genera Invoice e Receipt</button>
       <button class="btn" id="r-zip">Foto scontrini (.zip)</button>
     </div>
-    <div class="actions"><button class="btn danger" id="r-clear">Archivia mese…</button></div>
+    <div class="actions"><button class="btn danger" id="r-clear">Cancella mese…</button></div>
     <div class="confirm" id="r-confirm" hidden>
-      <span>Cancella dal telefono tutte le spese e le foto di questo mese. Fallo solo dopo aver inviato la nota spese.</span>
+      <span>Cancella dal telefono tutte le spese e le foto di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.</span>
       <div class="actions"><button class="btn" id="r-clear-no">Annulla</button><button class="btn danger" id="r-clear-yes">Cancella il mese</button></div>
     </div>
   </div>
@@ -214,8 +217,8 @@ td.r,th.r{text-align:right}
     </div>
     <div>
       <span class="lbl">Backup</span>
-      <p class="small muted" style="margin:0 0 8px">Le spese sono salvate solo su questo telefono. Il backup contiene le spese, non le foto.</p>
-      <div class="actions"><button class="btn" id="s-exp">Esporta backup</button><label class="btn filebtn">Importa backup<input type="file" id="s-imp" accept=".json,application/json"></label></div>
+      <p class="small muted" style="margin:0 0 8px">Spese e foto sono salvate solo su questo telefono. Il backup è un file .zip con spese e foto: salvalo su iCloud Drive con «Salva su File».</p>
+      <div class="actions"><button class="btn" id="s-exp">Esporta backup</button><label class="btn filebtn">Importa backup<input type="file" id="s-imp" accept=".zip,.json,application/zip,application/json"></label></div>
     </div>
     <div class="msg" id="s-msg" role="status"></div>
     <p class="small muted" style="margin:0">Expenxe · funziona offline · nessun dato lascia il telefono</p>
@@ -276,7 +279,7 @@ let spese=[], month=todayISO().slice(0,7), cfg={name:"",lastDest:"",lastCur:"EUR
 async function boot(){
   try{
     spese=await getAll();
-    for(const k of ["name","lastDest","lastCur","lastCurDate","catUse","docByCol"]){const v=await getCfg(k);if(v!==undefined)cfg[k]=v}
+    for(const k of ["name","lastDest","lastCur","lastCurDate","catUse","docByCol","lastBackupAt"]){const v=await getCfg(k);if(v!==undefined)cfg[k]=v}
   }catch(e){ $("#list").innerHTML='<div class="empty">Il browser non permette di salvare dati. Apri l\'app da Safari, non in navigazione privata.</div>';return }
   render();
   if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
@@ -295,6 +298,9 @@ async function render(){
   $("#m-n").textContent=items.length?(items.length+(items.length===1?" spesa":" spese")+(fx?" · "+fx+" in valuta":"")):"";
   const tpl=await getCfg("template");
   let html="";
+  const unsaved=spese.filter(x=>(x.updated||x.created||0)>(cfg.lastBackupAt||0));
+  const oldest=unsaved.length?Math.min(...unsaved.map(x=>x.updated||x.created||Date.now())):0;
+  if(unsaved.length&&Date.now()-oldest>7*864e5)html+='<div class="notice"><span>'+unsaved.length+(unsaved.length===1?' spesa non è':' spese non sono')+' ancora nel backup.</span><button class="btn" id="n-bk">Salva backup</button></div>';
   if(!tpl)html+='<div class="notice"><span>Carica una volta il modello nota spese Estun per poter generare il file a fine mese.</span><button class="btn" id="n-tpl">Carica modello</button></div>';
   if(!items.length)html+='<div class="empty">Nessuna spesa in '+esc(monthLabel(month))+'.<br>Tocca <b>+ Spesa</b> quando paghi: importo, voce, fatto.</div>';
   const byDay={};items.forEach(s=>(byDay[s.date]=byDay[s.date]||[]).push(s));
@@ -302,12 +308,13 @@ async function render(){
     const list=byDay[d]; const sums={};list.forEach(s=>{sums[s.currency]=(sums[s.currency]||0)+s.amount});
     const dt=Object.keys(sums).sort((a,b)=>a==="EUR"?-1:b==="EUR"?1:0).map(c=>(c==="EUR"?"":c+" ")+fmt(sums[c])).join(" + ");
     html+='<section class="day"><div class="dayh"><span>'+esc(dayLabel(d))+'</span><span class="num">'+dt+'</span></div>'+
-      list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(COLNAME[s.col]||s.col)+(s.doc==="fattura"?'<span class="tag">FATTURA</span>':"")+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
-        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'</span></button>').join("")+'</section>';
+      list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(COLNAME[s.col]||s.col)+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
+        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(docOf(s)==="fattura"?"Fattura":"Scontrino")+'</span>'+'</span></button>').join("")+'</section>';
   }
   $("#list").innerHTML=html;
   $("#b-report").disabled=!items.length;
   const nt=$("#n-tpl"); if(nt)nt.onclick=()=>{openSettings();};
+  const nb=$("#n-bk"); if(nb)nb.onclick=()=>exportBackup(null);
 }
 $("#list").addEventListener("click",e=>{const b=e.target.closest(".item");if(b)openForm(spese.find(s=>s.id===b.dataset.id))});
 $("#b-prev").onclick=()=>{month=shiftMonth(month,-1);render()};
@@ -357,7 +364,7 @@ $("#f").addEventListener("submit",async e=>{
   if(amount==null){setMsg("#f-msg","Scrivi un importo, ad esempio 14,80.","err");$("#f-amt").focus();return}
   const col=selectedCol(); if(!col){setMsg("#f-msg","Scegli la voce del modello.","err");return}
   const date=$("#f-date").value; if(!date){setMsg("#f-msg","Scegli la data.","err");return}
-  const o=editing?{...editing}:{id:uid(),created:Date.now()};
+  const o=editing?{...editing}:{id:uid(),created:Date.now()};o.updated=Date.now();
   Object.assign(o,{amount,currency:$("#f-cur").value,col,date,dest:$("#f-dest").value.trim(),note:$("#f-note").value.trim(),doc:currentDoc()});delete o.receipt;
   cfg.docByCol=cfg.docByCol||{};cfg.docByCol[col]=o.doc;setCfg("docByCol",cfg.docByCol).catch(()=>{});
   try{
@@ -536,16 +543,36 @@ $("#s-tpl-in").addEventListener("change",async e=>{
     await refreshTplText();setMsg("#s-msg","Modello salvato sul telefono.");render()}
   catch(_){setMsg("#s-msg","Questo file non è il modello nota spese (manca il foglio DATA).","err")}
 });
-$("#s-exp").onclick=async()=>{
-  const data={app:"expenxe",v:1,exported:new Date().toISOString(),name:cfg.name,spese};
-  const r=await deliver(new Blob([JSON.stringify(data)],{type:"application/json"}),"Expenxe_backup_"+todayISO()+".json","application/json");
-  setMsg("#s-msg",r==="cancel"?"":"Backup esportato.");
-};
+async function exportBackup(msgSel){
+  try{
+    const zip=new JSZip();
+    zip.file("backup.json",JSON.stringify({app:"expenxe",v:2,exported:new Date().toISOString(),name:cfg.name,spese}));
+    for(const x of spese){if(!x.photo)continue;const b=await getFoto(x.id);if(b)zip.file("foto/"+x.id+".jpg",b)}
+    const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE"});
+    const r=await deliver(blob,"Expenxe_backup_"+todayISO()+".zip","application/zip");
+    if(r!=="cancel"){cfg.lastBackupAt=Date.now();await setCfg("lastBackupAt",cfg.lastBackupAt);render()}
+    if(msgSel)setMsg(msgSel,r==="cancel"?"":"Backup pronto: salvalo su iCloud Drive.");
+  }catch(e){if(msgSel)setMsg(msgSel,"Non riesco a creare il backup.","err")}
+}
+$("#s-exp").onclick=()=>exportBackup("#s-msg");
 $("#s-imp").addEventListener("change",async e=>{
   const f=e.target.files[0];e.target.value="";if(!f)return;
-  try{const d=JSON.parse(await f.text());if(d.app!=="expenxe"||!Array.isArray(d.spese))throw 0;
-    let n=0;for(const s of d.spese){if(s&&s.id&&s.date&&typeof s.amount==="number"&&s.col){s.doc=docOf(s);s.photo=false;if(!spese.some(x=>x.id===s.id)){await putSpesa(s);spese.push(s);n++}}}
-    setMsg("#s-msg","Importate "+n+" spese.");render()}
+  try{
+    let d,zip=null;
+    if(/\.zip$/i.test(f.name)||f.type==="application/zip"){zip=await JSZip.loadAsync(await f.arrayBuffer());const j=zip.file("backup.json");if(!j)throw 0;d=JSON.parse(await j.async("string"))}
+    else d=JSON.parse(await f.text());
+    if(d.app!=="expenxe"||!Array.isArray(d.spese))throw 0;
+    let n=0,ph=0;
+    for(const x of d.spese){
+      if(!(x&&x.id&&x.date&&typeof x.amount==="number"&&x.col))continue;
+      if(spese.some(y=>y.id===x.id))continue;
+      x.doc=docOf(x);x.photo=false;
+      const pf=zip&&zip.file("foto/"+x.id+".jpg");
+      if(pf){await putFoto(x.id,await pf.async("blob"));x.photo=true;ph++}
+      await putSpesa(x);spese.push(x);n++;
+    }
+    cfg.lastBackupAt=Date.now();await setCfg("lastBackupAt",cfg.lastBackupAt);
+    setMsg("#s-msg","Importate "+n+" spese"+(ph?" e "+ph+" foto":"")+". Quelle già presenti sono state lasciate com'erano.");render()}
   catch(_){setMsg("#s-msg","Questo file non è un backup di Expenxe.","err")}
 });
 
