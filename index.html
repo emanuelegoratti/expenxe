@@ -104,8 +104,12 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .tag{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px;background:var(--accent-soft);color:var(--accent)}
 .check{display:flex;align-items:center;gap:10px;font-weight:600}
 .check input{width:22px;height:22px;accent-color:var(--accent)}
-.photo{display:flex;gap:10px;align-items:center}
-.photo img{width:56px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.photo{display:flex;flex-direction:column;gap:10px}
+.photo img{width:100%;max-height:340px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:var(--sunk);cursor:zoom-in}
+.photo .actions .btn{flex:1}
+#d-img{max-width:none;max-height:none;width:100%;height:100%;margin:0;border-radius:0;background:#000}
+#d-img img{width:100%;height:100%;object-fit:contain;display:block;touch-action:pinch-zoom}
+#d-img .iconbtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 12px);color:#fff;background:rgba(0,0,0,.55);border-radius:50%;width:44px;height:44px;padding:0}
 .filebtn{position:relative;overflow:hidden;display:inline-flex}
 .filebtn input{position:absolute;inset:0;opacity:0}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -171,8 +175,10 @@ td.r,th.r{text-align:right}
     <div><span class="lbl" id="f-doc-l" data-i18n="doc">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="fattura" data-i18n="invoice">Fattura</button><button type="button" data-doc="scontrino" data-i18n="receipt">Scontrino</button></div></div>
     <div class="photo">
       <img id="f-img" alt="" hidden>
-      <label class="btn filebtn" id="f-photo-l"><span data-i18n="photo">Foto documento</span><input type="file" id="f-photo" accept="image/*"></label>
-      <button class="btn" type="button" id="f-photo-del" hidden data-i18n="removePhoto">Togli foto</button>
+      <div class="actions">
+        <label class="btn filebtn" id="f-photo-l"><span data-i18n="photo">Foto documento</span><input type="file" id="f-photo" accept="image/*"></label>
+        <button class="btn" type="button" id="f-photo-del" hidden data-i18n="removePhoto">Togli foto</button>
+      </div>
     </div>
     <div class="msg" id="f-msg" role="status"></div>
     <div class="confirm" id="f-confirm" hidden>
@@ -185,6 +191,9 @@ td.r,th.r{text-align:right}
     </div>
   </form>
 </dialog>
+
+<!-- foto a schermo intero -->
+<dialog id="d-img"><img id="z-img" alt=""><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi">✕</button></dialog>
 
 <!-- report -->
 <dialog id="d-rep" aria-labelledby="r-title">
@@ -456,6 +465,8 @@ $("#f-photo").addEventListener("change",async e=>{
   try{photoBlob=await shrink(f);const img=$("#f-img");img.src=URL.createObjectURL(photoBlob);img.hidden=false;$("#f-photo-del").hidden=false}
   catch(_){setMsg("#f-msg",t("errPhoto"),"err")}
 });
+$("#f-img").onclick=()=>{$("#z-img").src=$("#f-img").src;$("#d-img").showModal()};
+$("#d-img").addEventListener("click",e=>{if(e.target.id==="z-img"||e.target===e.currentTarget)$("#d-img").close()});
 $("#f-photo-del").onclick=()=>{photoBlob=null;$("#f-img").hidden=true;$("#f-photo-del").hidden=true};
 $("#f-del").onclick=()=>{$("#f-confirm").hidden=false};
 $("#f-del-no").onclick=()=>{$("#f-confirm").hidden=true};
