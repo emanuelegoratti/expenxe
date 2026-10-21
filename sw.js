@@ -1,5 +1,5 @@
 /* Cache dell'app per l'uso offline. Cambia VERSION a ogni aggiornamento dei file. */
-const VERSION = "expenxe-6";
+const VERSION = "expenxe-7";
 const FILES = ["./", "index.html", "jszip.min.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
