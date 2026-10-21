@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Expenxe</title>
+<meta name="theme-color" content="#0d6650">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expenxe">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+/* Layout: testata con mese e totale, lista per giorno, pulsante + in basso, fogli a comparsa per inserimento e report */
+:root{
+  --bg:#eef2f0; --surface:#ffffff; --sunk:#f5f8f6; --ink:#16201c; --muted:#5a6762; --line:#d6dfdb;
+  --accent:#0d6650; --accent-ink:#ffffff; --accent-soft:#dcede6;
+  --warn:#995500; --warn-soft:#fbefdb; --bad:#b0281f; --bad-soft:#fbe6e3;
+  --f-body:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --f-num:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r:14px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1412; --surface:#171e1b; --sunk:#121816; --ink:#e4ebe8; --muted:#97a6a0; --line:#2a3530;
+  --accent:#4cc29c; --accent-ink:#04241b; --accent-soft:#17312a;
+  --warn:#e9a64c; --warn-soft:#2d2414; --bad:#f08b80; --bad-soft:#321a17; color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.4}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+
+header{position:sticky;top:0;z-index:5;background:var(--accent);color:var(--accent-ink);
+  padding:calc(env(safe-area-inset-top,0px) + 10px) max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px))}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand{font-weight:800;font-size:1.05rem;letter-spacing:.01em}
+.iconbtn{background:transparent;border:0;color:inherit;font-size:1.4rem;line-height:1;padding:6px 10px;border-radius:10px;cursor:pointer}
+.iconbtn:active{background:rgba(255,255,255,.15)}
+.month{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.month .mlbl{font-size:1.25rem;font-weight:700;text-transform:capitalize}
+.total{margin-top:2px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.total .v{font-family:var(--f-num);font-size:2rem;font-weight:600;font-variant-numeric:tabular-nums}
+.total .n{opacity:.85;font-size:.9rem}
+
+main{padding:14px max(16px,env(safe-area-inset-right,0px)) calc(110px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto}
+.day{display:flex;flex-direction:column;gap:6px}
+.dayh{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 4px}
+.item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;width:100%;text-align:left;cursor:pointer}
+.badge{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:var(--f-num)}
+.item .t{min-width:0}
+.item .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.item .t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:.86rem}
+.item .a{font-family:var(--f-num);font-weight:600;text-align:right}
+.item .a small{display:block;font-weight:400;color:var(--warn);font-size:.72rem;font-family:var(--f-body)}
+.empty{text-align:center;color:var(--muted);padding:40px 16px;border:1px dashed var(--line);border-radius:var(--r)}
+.notice{background:var(--warn-soft);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;gap:10px;justify-content:center;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:linear-gradient(to top,var(--bg) 70%,transparent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 16px;font-weight:650;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.big{flex:1;max-width:300px;font-size:1.05rem;padding:15px}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.45}
+.btn:focus-visible,.chip:focus-visible,.item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:640px;max-height:94vh;background:var(--surface);color:var(--ink);border-radius:20px 20px 0 0}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.sheet{display:flex;flex-direction:column;gap:14px;padding:14px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-y:auto;max-height:94vh}
+.sheeth{display:flex;justify-content:space-between;align-items:center}
+.sheeth h2{margin:0;font-size:1.1rem}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto}
+.amount{display:flex;gap:8px;align-items:stretch}
+.amount input{flex:1;min-width:0;font-family:var(--f-num);font-size:2.2rem;font-weight:600;text-align:right;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--sunk)}
+.amount select{width:88px;border:1px solid var(--line);border-radius:12px;background:var(--sunk);padding:0 8px;font-weight:600}
+.lbl{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.chip{display:flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:9px 10px;text-align:left;cursor:pointer;font-size:.92rem}
+.chip i{font-style:normal;font-family:var(--f-num);font-weight:700;color:var(--muted);font-size:.8rem}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"] i{color:var(--accent-ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--sunk);min-width:0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:10px 6px;font-weight:650;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tag{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px;background:var(--accent-soft);color:var(--accent)}
+.check{display:flex;align-items:center;gap:10px;font-weight:600}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+.photo{display:flex;gap:10px;align-items:center}
+.photo img{width:56px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.filebtn{position:relative;overflow:hidden;display:inline-flex}
+.filebtn input{position:absolute;inset:0;opacity:0}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions .btn{flex:1}
+.savebar{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom,0px));background:var(--surface);padding:10px 0 calc(6px + env(safe-area-inset-bottom,0px));margin-top:-4px;border-top:1px solid var(--line)}
+.more{background:none;border:1px dashed var(--line);border-radius:10px;padding:9px 10px;color:var(--muted);cursor:pointer;font-size:.92rem}
+.msg{min-height:1.2em;font-size:.92rem;color:var(--muted)}
+.msg.err{color:var(--bad)} .msg.warn{color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:.92rem;table-layout:fixed}
+#r-body td:nth-child(1){width:2em}#r-body td:nth-child(3){width:2.5em}#r-body td:nth-child(4){width:6.5em}
+td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+td.r,th.r{text-align:right}
+.tot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:8px}
+.tot .v{font-family:var(--f-num);font-size:1.5rem;font-weight:600}
+.confirm{background:var(--bad-soft);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <span class="brand">Expenxe</span>
+    <button class="iconbtn" id="b-set" aria-label="Impostazioni">⚙︎</button>
+  </div>
+  <div class="month">
+    <button class="iconbtn" id="b-prev" aria-label="Mese precedente">‹</button>
+    <span class="mlbl" id="m-lbl"></span>
+    <button class="iconbtn" id="b-next" aria-label="Mese successivo">›</button>
+  </div>
+  <div class="total"><span class="v" id="m-tot">0,00</span><span class="n" id="m-n"></span></div>
+</header>
+
+<main id="list"></main>
+
+<div class="bar">
+  <button class="btn" id="b-report">Nota spese</button>
+  <button class="btn primary big" id="b-add">+ Spesa</button>
+</div>
+
+<!-- inserimento -->
+<dialog id="d-form" aria-labelledby="f-title">
+  <form class="sheet" id="f" method="dialog">
+    <div class="grab"></div>
+    <div class="sheeth"><h2 id="f-title">Nuova spesa</h2><button class="iconbtn" type="button" data-close aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div>
+      <label class="lbl" for="f-amt">Importo</label>
+      <div class="amount">
+        <input id="f-amt" inputmode="decimal" autocomplete="off" placeholder="0,00" required>
+        <select id="f-cur" aria-label="Valuta"></select>
+      </div>
+    </div>
+    <div>
+      <span class="lbl" id="f-cat-l">Voce del modello</span>
+      <div class="chips" id="f-cats" role="group" aria-labelledby="f-cat-l"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label class="lbl" for="f-date">Data</label><input type="date" id="f-date" required></div>
+      <div class="field"><label class="lbl" for="f-dest">Destinazione</label><input id="f-dest" list="dl-dest" autocomplete="off" placeholder="Città, cliente"></div>
+    </div>
+    <datalist id="dl-dest"></datalist>
+    <div class="field"><label class="lbl" for="f-note">Nota (facoltativa)</label><input id="f-note" autocomplete="off" placeholder="Es. pranzo con tecnico cliente"></div>
+    <div><span class="lbl" id="f-doc-l">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="scontrino">Scontrino</button><button type="button" data-doc="fattura">Fattura</button><button type="button" data-doc="nessuno">Nessuno</button></div></div>
+    <div class="photo">
+      <img id="f-img" alt="Foto scontrino" hidden>
+      <label class="btn filebtn" id="f-photo-l">Foto scontrino<input type="file" id="f-photo" accept="image/*" capture="environment"></label>
+      <button class="btn" type="button" id="f-photo-del" hidden>Togli foto</button>
+    </div>
+    <div class="msg" id="f-msg" role="status"></div>
+    <div class="confirm" id="f-confirm" hidden>
+      <span>Eliminare questa spesa?</span>
+      <div class="actions"><button class="btn" type="button" id="f-del-no">Annulla</button><button class="btn danger" type="button" id="f-del-yes">Elimina</button></div>
+    </div>
+    <div class="actions savebar">
+      <button class="btn danger" type="button" id="f-del" hidden>Elimina</button>
+      <button class="btn primary" type="submit" id="f-save">Salva</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- report -->
+<dialog id="d-rep" aria-labelledby="r-title">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheeth"><h2 id="r-title">Nota spese</h2><button class="iconbtn" type="button" data-close aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div id="r-body"></div>
+    <div class="msg" id="r-msg" role="status"></div>
+    <div class="actions">
+      <button class="btn primary" id="r-xlsx">Genera Invoice e Receipt</button>
+      <button class="btn" id="r-zip">Foto scontrini (.zip)</button>
+    </div>
+    <div class="actions"><button class="btn danger" id="r-clear">Archivia mese…</button></div>
+    <div class="confirm" id="r-confirm" hidden>
+      <span>Cancella dal telefono tutte le spese e le foto di questo mese. Fallo solo dopo aver inviato la nota spese.</span>
+      <div class="actions"><button class="btn" id="r-clear-no">Annulla</button><button class="btn danger" id="r-clear-yes">Cancella il mese</button></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- impostazioni -->
+<dialog id="d-set" aria-labelledby="s-title">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheeth"><h2 id="s-title">Impostazioni</h2><button class="iconbtn" type="button" data-close aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div class="field"><label class="lbl" for="s-name">Nome e cognome</label><input id="s-name" autocomplete="name" placeholder="Come nel modello"></div>
+    <div>
+      <span class="lbl">Modello nota spese</span>
+      <p class="small muted" id="s-tpl" style="margin:0 0 8px"></p>
+      <label class="btn filebtn">Carica modello (.xlsx)<input type="file" id="s-tpl-in" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
+    </div>
+    <div>
+      <span class="lbl">Backup</span>
+      <p class="small muted" style="margin:0 0 8px">Le spese sono salvate solo su questo telefono. Il backup contiene le spese, non le foto.</p>
+      <div class="actions"><button class="btn" id="s-exp">Esporta backup</button><label class="btn filebtn">Importa backup<input type="file" id="s-imp" accept=".json,application/json"></label></div>
+    </div>
+    <div class="msg" id="s-msg" role="status"></div>
+    <p class="small muted" style="margin:0">Expenxe · funziona offline · nessun dato lascia il telefono</p>
+  </div>
+</dialog>
+
+<script src="jszip.min.js"></script>
+<script>
+"use strict";
+/* ---------- voci del modello Estun: colonne G..U del foglio DATA ---------- */
+const COLS=[["O","Pasto personale"],["L","Carburante"],["M","Pedaggi, vignetta"],["N","Parcheggio"],["H","Hotel (camera)"],["G","Volo o treno"],
+  ["Q","Pasto con inviti"],["P","Pasto, inviti di servizio"],["S","Taxi"],["U","Cancelleria, materiali"],["K","Noleggio auto"],["T","Cibo per l'ufficio"],
+  ["R","Regali a clienti"],["J","Auto: lavaggio, ricambi"],["I","Cibo in fattura hotel"]];
+const COLNAME=Object.fromEntries(COLS);
+const CURRENCIES=["EUR","CHF","USD","GBP","PLN","CZK","HUF","RON","SEK","DKK","NOK","BGN","RSD","JPY","UAH"];
+
+/* ---------- utilità ---------- */
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,"0");
+const isoOf=(y,m,d)=>y+"-"+pad(m)+"-"+pad(d);
+const todayISO=()=>{const d=new Date();return isoOf(d.getFullYear(),d.getMonth()+1,d.getDate())};
+const fmt=n=>Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function parseAmount(v){
+  let s=String(v||"").trim().replace(/[€\s]/g,""); if(!s)return null;
+  const lc=s.lastIndexOf(","),ld=s.lastIndexOf(".");
+  if(lc>ld)s=s.replace(/\./g,"").replace(",",".");else if(ld>lc&&lc>-1)s=s.replace(/,/g,"");
+  const n=Number(s); return isFinite(n)&&n>0?Math.round(n*100)/100:null;
+}
+const monthLabel=m=>{const [y,mo]=m.split("-").map(Number);return new Date(y,mo-1,1).toLocaleDateString("it-IT",{month:"long",year:"numeric"})};
+const dayLabel=iso=>{const [y,m,d]=iso.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})};
+const shiftMonth=(m,k)=>{let [y,mo]=m.split("-").map(Number);mo+=k;while(mo<1){mo+=12;y--}while(mo>12){mo-=12;y++}return y+"-"+pad(mo)};
+
+/* ---------- IndexedDB ---------- */
+let dbp=null;
+function db(){
+  if(!dbp)dbp=new Promise((res,rej)=>{const r=indexedDB.open("expenxe",1);
+    r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore("spese",{keyPath:"id"});d.createObjectStore("foto");d.createObjectStore("cfg")};
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+  return dbp;
+}
+async function tx(store,mode,fn){const d=await db();return new Promise((res,rej)=>{const t=d.transaction(store,mode);const s=t.objectStore(store);let out;Promise.resolve(fn(s)).then(v=>out=v);t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
+const req=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const getAll=()=>tx("spese","readonly",s=>req(s.getAll()));
+const putSpesa=o=>tx("spese","readwrite",s=>s.put(o));
+const delSpesa=id=>tx("spese","readwrite",s=>s.delete(id));
+const getFoto=id=>tx("foto","readonly",s=>req(s.get(id)));
+const putFoto=(id,b)=>tx("foto","readwrite",s=>s.put(b,id));
+const delFoto=id=>tx("foto","readwrite",s=>s.delete(id));
+const getCfg=k=>tx("cfg","readonly",s=>req(s.get(k)));
+const setCfg=(k,v)=>tx("cfg","readwrite",s=>s.put(v,k));
+
+/* ---------- stato ---------- */
+let lastSaved=null;
+let spese=[], month=todayISO().slice(0,7), cfg={name:"",lastDest:"",lastCur:"EUR",catUse:{}}, editing=null, photoBlob=undefined, persistAsked=false;
+
+async function boot(){
+  try{
+    spese=await getAll();
+    for(const k of ["name","lastDest","lastCur","lastCurDate","catUse","docByCol"]){const v=await getCfg(k);if(v!==undefined)cfg[k]=v}
+  }catch(e){ $("#list").innerHTML='<div class="empty">Il browser non permette di salvare dati. Apri l\'app da Safari, non in navigazione privata.</div>';return }
+  render();
+  if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+
+/* ---------- lista ---------- */
+function monthItems(m){return spese.filter(s=>s.date&&s.date.slice(0,7)===m).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.created||0)-(b.created||0))}
+async function render(){
+  $("#m-lbl").textContent=monthLabel(month);
+  const items=monthItems(month);
+  const eur=items.filter(s=>s.currency==="EUR").reduce((t,s)=>t+s.amount,0);
+  const fx=items.filter(s=>s.currency!=="EUR").length;
+  $("#m-tot").textContent="€ "+fmt(eur);
+  $("#m-n").textContent=items.length?(items.length+(items.length===1?" spesa":" spese")+(fx?" · "+fx+" in valuta":"")):"";
+  const tpl=await getCfg("template");
+  let html="";
+  if(!tpl)html+='<div class="notice"><span>Carica una volta il modello nota spese Estun per poter generare il file a fine mese.</span><button class="btn" id="n-tpl">Carica modello</button></div>';
+  if(!items.length)html+='<div class="empty">Nessuna spesa in '+esc(monthLabel(month))+'.<br>Tocca <b>+ Spesa</b> quando paghi: importo, voce, fatto.</div>';
+  const byDay={};items.forEach(s=>(byDay[s.date]=byDay[s.date]||[]).push(s));
+  for(const d of Object.keys(byDay).sort().reverse()){
+    const list=byDay[d]; const sums={};list.forEach(s=>{sums[s.currency]=(sums[s.currency]||0)+s.amount});
+    const dt=Object.keys(sums).sort((a,b)=>a==="EUR"?-1:b==="EUR"?1:0).map(c=>(c==="EUR"?"":c+" ")+fmt(sums[c])).join(" + ");
+    html+='<section class="day"><div class="dayh"><span>'+esc(dayLabel(d))+'</span><span class="num">'+dt+'</span></div>'+
+      list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(COLNAME[s.col]||s.col)+(s.doc==="fattura"?'<span class="tag">FATTURA</span>':"")+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
+        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+(s.doc==="nessuno"?'<small>senza documento</small>':"")+'</span></button>').join("")+'</section>';
+  }
+  $("#list").innerHTML=html;
+  $("#b-report").disabled=!items.length;
+  const nt=$("#n-tpl"); if(nt)nt.onclick=()=>{openSettings();};
+}
+$("#list").addEventListener("click",e=>{const b=e.target.closest(".item");if(b)openForm(spese.find(s=>s.id===b.dataset.id))});
+$("#b-prev").onclick=()=>{month=shiftMonth(month,-1);render()};
+$("#b-next").onclick=()=>{month=shiftMonth(month,1);render()};
+
+/* ---------- form ---------- */
+$("#f-cur").innerHTML=CURRENCIES.map(c=>'<option>'+c+'</option>').join("");
+function catOrder(){return [...COLS].sort((a,b)=>(cfg.catUse[b[0]]||0)-(cfg.catUse[a[0]]||0))}
+function renderCats(sel,all){
+  const ord=catOrder(); const showN=all?ord.length:8;
+  let list=ord.slice(0,showN); if(sel&&!list.some(c=>c[0]===sel))list.push(ord.find(c=>c[0]===sel));
+  $("#f-cats").innerHTML=list.map(([k,n])=>'<button type="button" class="chip" data-col="'+k+'" aria-pressed="'+(k===sel)+'"><i>'+k+'</i>'+esc(n)+'</button>').join("")+
+    (list.length<ord.length?'<button type="button" class="more" id="f-more">Altre '+(ord.length-list.length)+' voci</button>':'');
+}
+$("#f-cats").addEventListener("click",e=>{if(e.target.closest("#f-more")){renderCats(selectedCol(),true);return}
+  const c=e.target.closest(".chip");if(!c)return;
+  $("#f-cats").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x===c)));
+  if(!editing&&!docTouched){const d=(cfg.docByCol||{})[c.dataset.col];if(d)setDoc(d)}});
+function docOf(s){return s.doc||(s.receipt===false?"nessuno":"scontrino")}
+function setDoc(d){$("#f-doc").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.doc===d)))}
+function currentDoc(){const b=$("#f-doc").querySelector('[aria-pressed="true"]');return b?b.dataset.doc:"scontrino"}
+$("#f-doc").addEventListener("click",e=>{const b=e.target.closest("button");if(b){setDoc(b.dataset.doc);docTouched=true}});
+let docTouched=false;
+function selectedCol(){const c=$("#f-cats").querySelector('[aria-pressed="true"]');return c?c.dataset.col:null}
+async function openForm(s){
+  editing=s||null; photoBlob=undefined; docTouched=false;
+  $("#f-title").textContent=s?"Modifica spesa":"Nuova spesa";
+  $("#f-amt").value=s?fmt(s.amount):"";
+  $("#f-cur").value=s?s.currency:((cfg.lastCurDate&&Math.abs(Date.parse(todayISO())-Date.parse(cfg.lastCurDate))<=2*864e5)?(cfg.lastCur||"EUR"):"EUR");
+  const t=todayISO(); const recent=lastSaved&&Date.now()-lastSaved.at<10*60e3&&lastSaved.date.slice(0,7)===month?lastSaved.date:null;
+  $("#f-date").value=s?s.date:(recent||(t.slice(0,7)===month?t:month+"-01"));
+  $("#f-dest").value=s?(s.dest||""):(cfg.lastDest||"");
+  $("#f-note").value=s?(s.note||""):"";
+  setDoc(s?docOf(s):((cfg.docByCol||{})[s&&s.col]||"scontrino"));
+  renderCats(s?s.col:null);
+  const dests=[...new Set(spese.map(x=>x.dest).filter(Boolean))].slice(-30);
+  $("#dl-dest").innerHTML=dests.map(d=>'<option value="'+esc(d)+'">').join("");
+  $("#f-del").hidden=!s; $("#f-confirm").hidden=true; setMsg("#f-msg","");
+  const img=$("#f-img"); img.hidden=true; $("#f-photo-del").hidden=true;
+  if(s&&s.photo){const b=await getFoto(s.id);if(b){img.src=URL.createObjectURL(b);img.hidden=false;$("#f-photo-del").hidden=false}}
+  $("#d-form").showModal();
+  if(!s)setTimeout(()=>$("#f-amt").focus(),60);
+}
+$("#b-add").onclick=()=>openForm(null);
+$("#f").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const amount=parseAmount($("#f-amt").value);
+  if(amount==null){setMsg("#f-msg","Scrivi un importo, ad esempio 14,80.","err");$("#f-amt").focus();return}
+  const col=selectedCol(); if(!col){setMsg("#f-msg","Scegli la voce del modello.","err");return}
+  const date=$("#f-date").value; if(!date){setMsg("#f-msg","Scegli la data.","err");return}
+  const o=editing?{...editing}:{id:uid(),created:Date.now()};
+  Object.assign(o,{amount,currency:$("#f-cur").value,col,date,dest:$("#f-dest").value.trim(),note:$("#f-note").value.trim(),doc:currentDoc()});delete o.receipt;
+  cfg.docByCol=cfg.docByCol||{};cfg.docByCol[col]=o.doc;setCfg("docByCol",cfg.docByCol).catch(()=>{});
+  try{
+    if(photoBlob===null){await delFoto(o.id);o.photo=false}
+    else if(photoBlob){await putFoto(o.id,photoBlob);o.photo=true}
+    await putSpesa(o);
+    if(!editing){cfg.catUse[col]=(cfg.catUse[col]||0)+1;await setCfg("catUse",cfg.catUse)}
+    if(o.dest){cfg.lastDest=o.dest;await setCfg("lastDest",o.dest)}
+    cfg.lastCur=o.currency;cfg.lastCurDate=todayISO();await setCfg("lastCur",o.currency);await setCfg("lastCurDate",cfg.lastCurDate);
+    lastSaved={date:o.date,at:Date.now()};
+    const i=spese.findIndex(x=>x.id===o.id); if(i>-1)spese[i]=o; else spese.push(o);
+    if(!persistAsked&&navigator.storage&&navigator.storage.persist){persistAsked=true;navigator.storage.persist().catch(()=>{})}
+    $("#d-form").close(); if(o.date.slice(0,7)!==month)month=o.date.slice(0,7); render();
+  }catch(err){setMsg("#f-msg","Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup dalle impostazioni.","err")}
+});
+$("#f-photo").addEventListener("change",async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{photoBlob=await shrink(f);const img=$("#f-img");img.src=URL.createObjectURL(photoBlob);img.hidden=false;$("#f-photo-del").hidden=false}
+  catch(_){setMsg("#f-msg","Questa foto non si riesce ad aprire.","err")}
+});
+$("#f-photo-del").onclick=()=>{photoBlob=null;$("#f-img").hidden=true;$("#f-photo-del").hidden=true};
+$("#f-del").onclick=()=>{$("#f-confirm").hidden=false};
+$("#f-del-no").onclick=()=>{$("#f-confirm").hidden=true};
+$("#f-del-yes").onclick=async()=>{if(!editing)return;await delSpesa(editing.id);await delFoto(editing.id).catch(()=>{});spese=spese.filter(s=>s.id!==editing.id);$("#d-form").close();render()};
+async function shrink(file){
+  const url=URL.createObjectURL(file);
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+  const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+  const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+  return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(),"image/jpeg",0.8));
+}
+
+/* ---------- dialog ---------- */
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
+document.querySelectorAll("dialog").forEach(d=>d.addEventListener("click",e=>{if(e.target===d)d.close()}));
+function setMsg(sel,t,cls){const el=$(sel);el.textContent=t||"";el.className="msg"+(cls?" "+cls:"")}
+
+/*TEMPLATE-START*/
+/* Compila il foglio DATA del modello: riga 7 = giorno 1, colonne B (destinazione), D (valuta), F (n. scontrino), G..V (importi) */
+const DAY_COLS=["B","C","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V"];
+function xmlEsc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function setCell(xml,ref,val){
+  const re=new RegExp('<c r="'+ref+'"([^>]*?)(/>|>[\\s\\S]*?</c>)');let hit=false;
+  const out=xml.replace(re,(m,attrs)=>{hit=true;const a=attrs.replace(/\s+t="[^"]*"/,"");
+    if(val===null||val===undefined||val==="")return '<c r="'+ref+'"'+a+'/>';
+    if(typeof val==="number")return '<c r="'+ref+'"'+a+'><v>'+val+'</v></c>';
+    return '<c r="'+ref+'"'+a+' t="inlineStr"><is><t xml:space="preserve">'+xmlEsc(val)+'</t></is></c>'});
+  return {xml:out,hit};
+}
+function excelSerial(iso){const [y,m,d]=iso.split("-").map(Number);return (Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5}
+function fillSheetXml(xml,rows,opt){
+  const warn=[];let miss=0;
+  const put=(ref,v)=>{const r=setCell(xml,ref,v);xml=r.xml;if(!r.hit)miss++};
+  for(let r=7;r<=37;r++){for(const c of DAY_COLS)put(c+r,null);put("D"+r,"EUR")}
+  if(opt.employee)put("B2",opt.employee);
+  const first=excelSerial(opt.month+"-01");put("H2",first);put("I2",excelSerial(opt.today));
+  const cache=(ref,v)=>{xml=xml.replace(new RegExp('(<c r="'+ref+'"[^>]*>[\\s\\S]*?)<v>[^<]*</v>(</c>)'),(m,a,b)=>/<\/c>/.test(a)?m:a+"<v>"+v+"</v>"+b)};
+  cache("A3",first+16);for(let r=7;r<=37;r++)cache("A"+r,first+r-7);
+  const byDay={};rows.forEach(r=>{const d=+r.date.slice(8,10);(byDay[d]=byDay[d]||[]).push(r)});
+  for(const d of Object.keys(byDay)){
+    const list=byDay[d];const rr=6+Number(d);
+    const curs=[...new Set(list.map(x=>x.currency||"EUR"))];
+    if(curs.length>1)warn.push("Il giorno "+d+" ha spese in valute diverse ("+curs.join(", ")+"): il modello ha una sola valuta per giorno, correggi a mano.");
+    put("D"+rr,curs[0]);
+    const dests=[...new Set(list.map(x=>[(x.dest||"").trim(),(x.note||"").trim()].filter(Boolean).join(" ")).filter(Boolean))];
+    put("B"+rr,dests.join(", "));
+    put("F"+rr,list.map(x=>"#"+x.n+(x.doc==="nessuno"?" (senza documento)":"")).join(", "));
+    const sums={};list.forEach(x=>{sums[x.col]=(sums[x.col]||0)+x.amount});
+    for(const c of Object.keys(sums))put(c+rr,Math.round(sums[c]*100)/100);
+  }
+  if(miss)warn.push("Alcune celle non sono state trovate: controlla che il modello caricato sia quello giusto.");
+  return {xml,warn};
+}
+/*TEMPLATE-END*/
+
+/* ---------- report: due file, Invoice (fatture) e Receipt (scontrini e spese senza documento) ---------- */
+const KINDS=[{key:"Invoice",label:"Invoice · fatture",test:s=>docOf(s)==="fattura"},{key:"Receipt",label:"Receipt · scontrini",test:s=>docOf(s)!=="fattura"}];
+function numbered(m,kind){return monthItems(m).filter(kind.test).map((s,i)=>({...s,doc:docOf(s),n:i+1}))}
+function summary(rows){
+  const eur=rows.filter(r=>r.currency==="EUR");const by={};eur.forEach(r=>{by[r.col]=by[r.col]||{n:0,t:0};by[r.col].n++;by[r.col].t+=r.amount});
+  return {by,tot:eur.reduce((t,r)=>t+r.amount,0),fx:rows.length-eur.length,none:rows.filter(r=>r.doc==="nessuno").length};
+}
+function openReport(){
+  $("#r-title").textContent="Nota spese · "+monthLabel(month);
+  let html="",grand=0;
+  for(const k of KINDS){
+    const rows=numbered(month,k); if(!rows.length)continue;
+    const sm=summary(rows); grand+=sm.tot;
+    html+='<h3 style="margin:10px 0 4px;font-size:1rem">'+esc(k.label)+' <span class="muted small">'+rows.length+(rows.length===1?" spesa":" spese")+'</span></h3>'+
+      '<table><tbody>'+"GHIJKLMNOPQRSTU".split("").filter(c=>sm.by[c]).map(c=>'<tr><td class="num" style="width:2em">'+c+'</td><td>'+esc(COLNAME[c])+'</td><td class="r num">'+sm.by[c].n+'</td><td class="r num">'+fmt(sm.by[c].t)+'</td></tr>').join("")+
+      '<tr><td></td><td><b>Totale €</b>'+(sm.fx?' <span class="small" style="color:var(--warn)">+ '+sm.fx+' in valuta</span>':'')+(sm.none?' <span class="small" style="color:var(--warn)">· '+sm.none+' senza documento</span>':'')+'</td><td></td><td class="r num"><b>'+fmt(sm.tot)+'</b></td></tr></tbody></table>';
+  }
+  html+='<div class="tot"><span><b>Totale del mese</b></span><span class="v">€ '+fmt(grand)+'</span></div>';
+  $("#r-body").innerHTML=html;
+  $("#r-zip").disabled=!monthItems(month).some(r=>r.photo);
+  $("#r-confirm").hidden=true; setMsg("#r-msg","");
+  $("#d-rep").showModal();
+}
+$("#b-report").onclick=openReport;
+function fileName(kind){
+  const yy=month.slice(2,4),mm=month.slice(5,7);
+  const p=(cfg.name||"").trim().split(/\s+/).filter(Boolean);
+  const clean=x=>x.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z]/g,"");
+  if(p.length<2)return yy+"."+mm+"_"+kind+".xlsx";
+  return yy+"."+mm+"_"+clean(p[p.length-1]).toUpperCase()+"_"+clean(p[0]).charAt(0).toUpperCase()+"._"+kind+".xlsx";
+}
+async function deliverMany(items){
+  const files=items.map(i=>new File([i.blob],i.name,{type:i.type}));
+  if(navigator.canShare&&navigator.canShare({files})){
+    try{await navigator.share({files});return "shared"}catch(e){if(e&&e.name==="AbortError")return "cancel"}
+  }
+  for(const i of items){const a=document.createElement("a");a.href=URL.createObjectURL(i.blob);a.download=i.name;document.body.append(a);a.click();
+    await new Promise(r=>setTimeout(r,400));setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},5000)}
+  return "download";
+}
+const deliver=(blob,name,type)=>deliverMany([{blob,name,type}]);
+const XLSX_TYPE="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+async function buildFile(tpl,rows){
+  const zip=await JSZip.loadAsync(tpl);
+  const wb=await zip.file("xl/workbook.xml").async("string");
+  const rels=await zip.file("xl/_rels/workbook.xml.rels").async("string");
+  const sm=wb.match(/<sheet [^>]*name="DATA"[^>]*r:id="([^"]+)"/);if(!sm)throw new Error("manca il foglio DATA");
+  const tm=rels.match(new RegExp('<Relationship [^>]*Id="'+sm[1]+'"[^>]*Target="([^"]+)"'))||rels.match(new RegExp('<Relationship [^>]*Target="([^"]+)"[^>]*Id="'+sm[1]+'"'));
+  const path="xl/"+tm[1].replace(/^\/?xl\//,"");
+  const res=fillSheetXml(await zip.file(path).async("string"),rows,{employee:cfg.name,month,today:todayISO()});
+  zip.file(path,res.xml);
+  zip.file("xl/workbook.xml",wb.replace(/<calcPr([^>]*?)\/>/,(m,a)=>/fullCalcOnLoad/.test(a)?m:'<calcPr'+a+' fullCalcOnLoad="1"/>'));
+  return {blob:await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:XLSX_TYPE}),warn:res.warn};
+}
+$("#r-xlsx").onclick=async()=>{
+  const tpl=await getCfg("template");
+  if(!tpl){setMsg("#r-msg","Prima carica il modello nota spese dalle impostazioni (⚙︎).","err");return}
+  try{
+    setMsg("#r-msg","Compilo i modelli…");
+    const out=[],warn=[];
+    for(const k of KINDS){const rows=numbered(month,k);if(!rows.length)continue;
+      const f=await buildFile(tpl,rows);out.push({blob:f.blob,name:fileName(k.key),type:XLSX_TYPE});f.warn.forEach(w=>warn.push(k.key+": "+w))}
+    const r=await deliverMany(out);
+    setMsg("#r-msg",warn.length?warn.join(" "):(r==="cancel"?"":"Pronti: "+out.map(o=>o.name).join(" e ")),warn.length?"warn":"");
+  }catch(e){setMsg("#r-msg","Non riesco a compilare il modello: "+(e.message||"file non valido")+".","err")}
+};
+$("#r-zip").onclick=async()=>{
+  try{
+    setMsg("#r-msg","Preparo le foto…");
+    const zip=new JSZip();
+    for(const k of KINDS)for(const r of numbered(month,k)){if(!r.photo)continue;const b=await getFoto(r.id);if(b)zip.file(k.key+"_"+pad(r.n)+"_"+r.date+"_"+r.col+".jpg",b)}
+    const blob=await zip.generateAsync({type:"blob"});
+    const r=await deliver(blob,"Giustificativi_"+month+".zip","application/zip");
+    setMsg("#r-msg",r==="cancel"?"":"Foto pronte, numerate come nella colonna F di ciascun file.");
+  }catch(e){setMsg("#r-msg","Non riesco a preparare le foto.","err")}
+};
+$("#r-clear").onclick=()=>{$("#r-confirm").hidden=false};
+$("#r-clear-no").onclick=()=>{$("#r-confirm").hidden=true};
+$("#r-clear-yes").onclick=async()=>{
+  for(const s of monthItems(month)){await delSpesa(s.id);if(s.photo)await delFoto(s.id).catch(()=>{})}
+  spese=spese.filter(s=>!(s.date&&s.date.slice(0,7)===month));$("#d-rep").close();render();
+};
+
+/* ---------- impostazioni ---------- */
+async function refreshTplText(){
+  const tpl=await getCfg("template"),tn=await getCfg("templateName");
+  $("#s-tpl").textContent=tpl?("Caricato: "+(tn||"modello.xlsx")+". Ricaricalo solo se l'amministrazione cambia il modello."):"Nessun modello caricato. Usa il file di un mese qualsiasi: le righe dei giorni vengono svuotate ogni volta.";
+}
+async function openSettings(){
+  $("#s-name").value=cfg.name||"";await refreshTplText();
+  setMsg("#s-msg","");if(!$("#d-set").open)$("#d-set").showModal();
+}
+$("#b-set").onclick=openSettings;
+$("#s-name").addEventListener("change",async e=>{cfg.name=e.target.value.trim();await setCfg("name",cfg.name)});
+$("#s-tpl-in").addEventListener("change",async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{const buf=await f.arrayBuffer();const z=await JSZip.loadAsync(buf);const wb=await z.file("xl/workbook.xml").async("string");
+    if(!/name="DATA"/.test(wb))throw 0;
+    await setCfg("template",buf);await setCfg("templateName",f.name);
+    await refreshTplText();setMsg("#s-msg","Modello salvato sul telefono.");render()}
+  catch(_){setMsg("#s-msg","Questo file non è il modello nota spese (manca il foglio DATA).","err")}
+});
+$("#s-exp").onclick=async()=>{
+  const data={app:"expenxe",v:1,exported:new Date().toISOString(),name:cfg.name,spese};
+  const r=await deliver(new Blob([JSON.stringify(data)],{type:"application/json"}),"Expenxe_backup_"+todayISO()+".json","application/json");
+  setMsg("#s-msg",r==="cancel"?"":"Backup esportato.");
+};
+$("#s-imp").addEventListener("change",async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{const d=JSON.parse(await f.text());if(d.app!=="expenxe"||!Array.isArray(d.spese))throw 0;
+    let n=0;for(const s of d.spese){if(s&&s.id&&s.date&&typeof s.amount==="number"&&s.col){if(!s.doc)s.doc=s.receipt===false?"nessuno":"scontrino";s.photo=false;if(!spese.some(x=>x.id===s.id)){await putSpesa(s);spese.push(s);n++}}}
+    setMsg("#s-msg","Importate "+n+" spese.");render()}
+  catch(_){setMsg("#s-msg","Questo file non è un backup di Expenxe.","err")}
+});
+
+boot();
+</script>
+</body>
+</html>
