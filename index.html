@@ -155,7 +155,7 @@ td.r,th.r{text-align:right}
     </div>
     <datalist id="dl-dest"></datalist>
     <div class="field"><label class="lbl" for="f-note">Nota (facoltativa)</label><input id="f-note" autocomplete="off" placeholder="Es. pranzo con tecnico cliente"></div>
-    <div><span class="lbl" id="f-doc-l">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="scontrino">Scontrino</button><button type="button" data-doc="fattura">Fattura</button><button type="button" data-doc="nessuno">Nessuno</button></div></div>
+    <div><span class="lbl" id="f-doc-l">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="fattura">Fattura</button><button type="button" data-doc="scontrino">Scontrino</button><button type="button" data-doc="nessuno">Nessuno</button></div></div>
     <div class="photo">
       <img id="f-img" alt="Foto scontrino" hidden>
       <label class="btn filebtn" id="f-photo-l">Foto scontrino<input type="file" id="f-photo" accept="image/*" capture="environment"></label>
@@ -317,7 +317,7 @@ $("#f-cats").addEventListener("click",e=>{if(e.target.closest("#f-more")){render
   if(!editing&&!docTouched){const d=(cfg.docByCol||{})[c.dataset.col];if(d)setDoc(d)}});
 function docOf(s){return s.doc||(s.receipt===false?"nessuno":"scontrino")}
 function setDoc(d){$("#f-doc").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.doc===d)))}
-function currentDoc(){const b=$("#f-doc").querySelector('[aria-pressed="true"]');return b?b.dataset.doc:"scontrino"}
+function currentDoc(){const b=$("#f-doc").querySelector('[aria-pressed="true"]');return b?b.dataset.doc:"fattura"}
 $("#f-doc").addEventListener("click",e=>{const b=e.target.closest("button");if(b){setDoc(b.dataset.doc);docTouched=true}});
 let docTouched=false;
 function selectedCol(){const c=$("#f-cats").querySelector('[aria-pressed="true"]');return c?c.dataset.col:null}
@@ -326,11 +326,10 @@ async function openForm(s){
   $("#f-title").textContent=s?"Modifica spesa":"Nuova spesa";
   $("#f-amt").value=s?fmt(s.amount):"";
   $("#f-cur").value=s?s.currency:((cfg.lastCurDate&&Math.abs(Date.parse(todayISO())-Date.parse(cfg.lastCurDate))<=2*864e5)?(cfg.lastCur||"EUR"):"EUR");
-  const t=todayISO(); const recent=lastSaved&&Date.now()-lastSaved.at<10*60e3&&lastSaved.date.slice(0,7)===month?lastSaved.date:null;
-  $("#f-date").value=s?s.date:(recent||(t.slice(0,7)===month?t:month+"-01"));
+  $("#f-date").value=s?s.date:todayISO();
   $("#f-dest").value=s?(s.dest||""):(cfg.lastDest||"");
   $("#f-note").value=s?(s.note||""):"";
-  setDoc(s?docOf(s):((cfg.docByCol||{})[s&&s.col]||"scontrino"));
+  setDoc(s?docOf(s):"fattura");
   renderCats(s?s.col:null);
   const dests=[...new Set(spese.map(x=>x.dest).filter(Boolean))].slice(-30);
   $("#dl-dest").innerHTML=dests.map(d=>'<option value="'+esc(d)+'">').join("");
