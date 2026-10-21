@@ -194,7 +194,7 @@ td.r,th.r{text-align:right}
     <div class="msg" id="r-msg" role="status"></div>
     <div class="actions">
       <button class="btn primary" id="r-xlsx">Genera Invoice e Receipt</button>
-      <button class="btn" id="r-zip">Foto scontrini (.zip)</button>
+      <button class="btn" id="r-zip">Foto documenti (.zip)</button>
     </div>
     <div class="actions"><button class="btn danger" id="r-clear">Cancella mese…</button></div>
     <div class="confirm" id="r-confirm" hidden>
@@ -510,11 +510,20 @@ $("#r-xlsx").onclick=async()=>{
 $("#r-zip").onclick=async()=>{
   try{
     setMsg("#r-msg","Preparo le foto…");
-    const zip=new JSZip();
-    for(const k of KINDS)for(const r of numbered(month,k)){if(!r.photo)continue;const b=await getFoto(r.id);if(b)zip.file(k.key+"_"+pad(r.n)+"_"+r.date+"_"+r.col+".jpg",b)}
-    const blob=await zip.generateAsync({type:"blob"});
-    const r=await deliver(blob,"Giustificativi_"+month+".zip","application/zip");
-    setMsg("#r-msg",r==="cancel"?"":"Foto pronte, numerate come nella colonna F di ciascun file.");
+    const out=[],missing=[];
+    for(const k of KINDS){
+      const rows=numbered(month,k); if(!rows.length)continue;
+      const zip=new JSZip(); let n=0;
+      for(const r of rows){
+        const b=r.photo?await getFoto(r.id):null;
+        if(b){zip.file(r.n+".jpg",b);n++}else missing.push(k.key+" #"+r.n);
+      }
+      if(n)out.push({blob:await zip.generateAsync({type:"blob"}),name:fileName(k.key).replace(/\.xlsx$/,".zip"),type:"application/zip"});
+    }
+    if(!out.length){setMsg("#r-msg","Nessuna foto salvata per questo mese.","warn");return}
+    const r=await deliverMany(out);
+    const miss=missing.length?" Senza foto: "+missing.join(", ")+".":"";
+    setMsg("#r-msg",(r==="cancel"?"":"Foto pronte: "+out.map(o=>o.name).join(" e ")+".")+miss,missing.length?"warn":"");
   }catch(e){setMsg("#r-msg","Non riesco a preparare le foto.","err")}
 };
 $("#r-clear").onclick=()=>{$("#r-confirm").hidden=false};
