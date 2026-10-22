@@ -242,13 +242,14 @@ td.r,th.r{text-align:right}
       <div class="actions"><button class="btn" id="s-exp" data-i18n="exportBk">Esporta backup</button><label class="btn filebtn"><span data-i18n="importBk">Importa backup</span><input type="file" id="s-imp" accept=".zip,.json,application/zip,application/json"></label></div>
     </div>
     <div class="msg" id="s-msg" role="status"></div>
-    <p class="small muted" style="margin:0" data-i18n="footer">Expenxe · funziona offline · nessun dato lascia il telefono</p>
+    <p class="small muted" style="margin:0"><span data-i18n="footer">Expenxe · funziona offline · nessun dato lascia il telefono</span> · v<span id="s-ver"></span></p>
   </div>
 </dialog>
 
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
+const APP_VERSION="21";
 /* ---------- voci del modello Estun: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -365,13 +366,22 @@ let lastSaved=null;
 let spese=[], month=todayISO().slice(0,7), cfg={name:"",lastDest:"",lastCur:"EUR",catUse:{}}, editing=null, formAtt=[], removedKeys=[], dupSig="", persistAsked=false;
 
 async function boot(){
-  applyStatic();
+  applyStatic();$("#s-ver").textContent=APP_VERSION;
   try{
     spese=await getAll();
     for(const k of ["name","lastDest","lastCur","lastCurDate","catUse","docByCol","lastBackupAt"]){const v=await getCfg(k);if(v!==undefined)cfg[k]=v}
   }catch(e){ $("#list").innerHTML='<div class="empty">'+esc(t("storageErr"))+'</div>';return }
   render();
-  if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{r.update().catch(()=>{})}).catch(()=>{});
+    /* quando arriva una versione nuova, la pagina si ricarica una volta da sola */
+    /* mai durante un inserimento: se un foglio è aperto, aspetta che si chiuda */
+    const hadCtl=!!navigator.serviceWorker.controller;let reloaded=false,pending=false;
+    const doReload=()=>{if(reloaded)return;if([...document.querySelectorAll("dialog")].some(d=>d.open)){pending=true;return}reloaded=true;location.reload()};
+    navigator.serviceWorker.addEventListener("controllerchange",()=>{if(hadCtl)doReload()});
+    document.querySelectorAll("dialog").forEach(d=>d.addEventListener("close",()=>{if(pending)setTimeout(doReload,300)}));
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})});
+  }
 }
 
 /* ---------- lista ---------- */
