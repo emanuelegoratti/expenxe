@@ -105,8 +105,17 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .check{display:flex;align-items:center;gap:10px;font-weight:600}
 .check input{width:22px;height:22px;accent-color:var(--accent)}
 .photo{display:flex;flex-direction:column;gap:10px}
-.photo img{width:100%;max-height:340px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:var(--sunk);cursor:zoom-in}
-.photo .actions .btn{flex:1}
+.atts{display:flex;flex-direction:column;gap:10px}
+.att{position:relative}
+.att img{display:block;width:100%;max-height:340px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:var(--sunk);cursor:zoom-in}
+.att .pdf{display:flex;gap:12px;align-items:center;width:100%;padding:14px 56px 14px 14px;border:1px solid var(--line);border-radius:12px;background:var(--sunk);text-align:left;cursor:pointer;min-width:0}
+.att .pdf b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att .pdf .ico{flex:none;width:40px;height:48px;border-radius:6px;background:var(--bad-soft);color:var(--bad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem}
+.att .pdf span{min-width:0}
+.att .rm{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.62);color:#fff;font-size:1rem;cursor:pointer}
+.att .pg{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.62);color:#fff;border-radius:8px;padding:2px 8px;font-size:.8rem;font-weight:700}
+.att .pdf~.pg{display:none}
+.photo>.btn{width:100%}
 #d-img{max-width:none;max-height:none;width:100%;height:100%;margin:0;border-radius:0;background:#000}
 #d-img img{width:100%;height:100%;object-fit:contain;display:block;touch-action:pinch-zoom}
 #d-img .iconbtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 12px);color:#fff;background:rgba(0,0,0,.55);border-radius:50%;width:44px;height:44px;padding:0}
@@ -174,11 +183,8 @@ td.r,th.r{text-align:right}
     <div class="field"><label class="lbl" for="f-note" data-i18n="note">Nota (facoltativa)</label><input id="f-note" autocomplete="off" data-i18n-ph="notePh" placeholder="Es. pranzo con tecnico cliente"></div>
     <div><span class="lbl" id="f-doc-l" data-i18n="doc">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="fattura" data-i18n="invoice">Fattura</button><button type="button" data-doc="scontrino" data-i18n="receipt">Scontrino</button></div></div>
     <div class="photo">
-      <img id="f-img" alt="" hidden>
-      <div class="actions">
-        <label class="btn filebtn" id="f-photo-l"><span data-i18n="photo">Foto documento</span><input type="file" id="f-photo" accept="image/*"></label>
-        <button class="btn" type="button" id="f-photo-del" hidden data-i18n="removePhoto">Togli foto</button>
-      </div>
+      <div class="atts" id="f-atts"></div>
+      <label class="btn filebtn" id="f-photo-l"><span id="f-photo-t">Aggiungi foto o PDF</span><input type="file" id="f-photo" accept="image/*,application/pdf,.pdf" multiple></label>
     </div>
     <div class="msg" id="f-msg" role="status"></div>
     <div class="confirm" id="f-confirm" hidden>
@@ -253,11 +259,11 @@ const $=s=>document.querySelector(s);
 const I18N={
 it:{settings:"Impostazioni",prevMonth:"Mese precedente",nextMonth:"Mese successivo",report:"Nota spese",add:"+ Spesa",newExp:"Nuova spesa",editExp:"Modifica spesa",close:"Chiudi",
 amount:"Importo",currency:"Valuta",category:"Voce del modello",date:"Data",dest:"Destinazione",destPh:"Città, cliente",note:"Nota (facoltativa)",notePh:"Es. pranzo con tecnico cliente",
-doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Foto documento",removePhoto:"Togli foto",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",delete:"Elimina",save:"Salva",
-genFiles:"Genera Invoice e Receipt",zipPhotos:"Foto documenti (.zip)",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
-clearWarn:"Cancella dal telefono tutte le spese e le foto di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.",
+doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Aggiungi foto o PDF",addPage:"Aggiungi pagina",remove:"Rimuovi",page:"pag. {n}",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",delete:"Elimina",save:"Salva",
+genFiles:"Genera Invoice e Receipt",zipPhotos:"Documenti (.zip)",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
+clearWarn:"Cancella dal telefono tutte le spese e gli allegati di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.",
 language:"Lingua",name:"Nome e cognome",namePh:"Come nel modello",tplTitle:"Modello nota spese",loadTpl:"Carica modello (.xlsx)",backup:"Backup",
-backupInfo:"Spese e foto sono salvate solo su questo telefono. Il backup è un file .zip con spese e foto: salvalo su iCloud Drive con «Salva su File».",
+backupInfo:"Spese e allegati sono salvati solo su questo telefono. Il backup è un file .zip con spese e allegati: salvalo su iCloud Drive con «Salva su File».",
 exportBk:"Esporta backup",importBk:"Importa backup",footer:"Expenxe · funziona offline · nessun dato lascia il telefono",
 storageErr:"Il browser non permette di salvare dati. Apri l'app da Safari, non in navigazione privata.",
 invoices:"Fatture",receipts:"Scontrini",exp1:"spesa",expN:"spese",inFx:"in valuta",
@@ -265,24 +271,24 @@ bkNotice1:"{n} spesa non è ancora nel backup.",bkNoticeN:"{n} spese non sono an
 tplNotice:"Carica una volta il modello nota spese Estun per poter generare il file a fine mese.",loadTplShort:"Carica modello",
 emptyMonth:"Nessuna spesa in {m}.<br>Tocca <b>+ Spesa</b> quando paghi: importo, voce, fatto.",moreCats:"Altre {n} voci",
 errAmount:"Scrivi un importo, ad esempio 14,80.",errCat:"Scegli la voce del modello.",errDate:"Scegli la data.",
-errSave:"Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup dalle impostazioni.",errPhoto:"Questa foto non si riesce ad aprire.",
+errSave:"Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup dalle impostazioni.",errPhoto:"Questo file non si riesce ad aprire.",errBig:"PDF troppo grande (massimo 15 MB).",errMax:"Massimo 8 allegati per spesa.",dup:"C'è già una spesa uguale ({d} · {c} · {a}). Tocca di nuovo Salva se è davvero un'altra spesa.",
 warnFx:"Il giorno {d} ha spese in valute diverse ({c}): il modello ha una sola valuta per giorno, correggi a mano.",
 warnCells:"Alcune celle non sono state trovate: controlla che il modello caricato sia quello giusto.",
 kindInvoice:"Invoice · fatture",kindReceipt:"Receipt · scontrini",reportTitle:"Nota spese · {m}",totEur:"Totale €",plusFx:"+ {n} in valuta",monthTot:"Totale del mese",
 noTpl:"Prima carica il modello nota spese dalle impostazioni (⚙︎).",building:"Compilo i modelli…",ready:"Pronti: {f}",and:" e ",
 errBuild:"Non riesco a compilare il modello: {e}.",badFile:"file non valido",noData:"manca il foglio DATA",
-prepPhotos:"Preparo le foto…",noPhotos:"Nessuna foto salvata per questo mese.",photosReady:"Foto pronte: {f}.",missPhotos:" Senza foto: {l}.",errPhotos:"Non riesco a preparare le foto.",
+prepPhotos:"Preparo i documenti…",noPhotos:"Nessun allegato per questo mese.",photosReady:"Documenti pronti: {f}.",missPhotos:" Senza allegato: {l}.",errPhotos:"Non riesco a preparare i documenti.",
 tplLoaded:"Caricato: {n}. Ricaricalo solo se l'amministrazione cambia il modello.",tplNone:"Nessun modello caricato. Usa il file di un mese qualsiasi: le righe dei giorni vengono svuotate ogni volta.",
 tplSaved:"Modello salvato sul telefono.",tplBad:"Questo file non è il modello nota spese (manca il foglio DATA).",
 bkReady:"Backup pronto: salvalo su iCloud Drive.",bkErr:"Non riesco a creare il backup.",
-imported:"Importate {n} spese{p}. Quelle già presenti sono state lasciate com'erano.",importedPh:" e {n} foto",bkBad:"Questo file non è un backup di Expenxe."},
+imported:"Importate {n} spese{p}. Quelle già presenti sono state lasciate com'erano.",importedPh:" e {n} allegati",bkBad:"Questo file non è un backup di Expenxe."},
 en:{settings:"Settings",prevMonth:"Previous month",nextMonth:"Next month",report:"Expense report",add:"+ Expense",newExp:"New expense",editExp:"Edit expense",close:"Close",
 amount:"Amount",currency:"Currency",category:"Template category",date:"Date",dest:"Destination",destPh:"Town, company",note:"Note (optional)",notePh:"E.g. lunch with customer technician",
-doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Document photo",removePhoto:"Remove photo",confirmDel:"Delete this expense?",cancel:"Cancel",delete:"Delete",save:"Save",
-genFiles:"Create Invoice and Receipt",zipPhotos:"Document photos (.zip)",clearMonth:"Delete month…",clearYes:"Delete the month",
-clearWarn:"Deletes all expenses and photos of this month from the phone, with no way to recover them. Not needed to free up space: do it only if you really want them gone.",
+doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Add photo or PDF",addPage:"Add page",remove:"Remove",page:"p. {n}",confirmDel:"Delete this expense?",cancel:"Cancel",delete:"Delete",save:"Save",
+genFiles:"Create Invoice and Receipt",zipPhotos:"Documents (.zip)",clearMonth:"Delete month…",clearYes:"Delete the month",
+clearWarn:"Deletes all expenses and attachments of this month from the phone, with no way to recover them. Not needed to free up space: do it only if you really want them gone.",
 language:"Language",name:"Full name",namePh:"As in the template",tplTitle:"Expense template",loadTpl:"Load template (.xlsx)",backup:"Backup",
-backupInfo:"Expenses and photos are stored only on this phone. The backup is a .zip file with expenses and photos: save it to iCloud Drive with “Save to Files”.",
+backupInfo:"Expenses and attachments are stored only on this phone. The backup is a .zip file with expenses and attachments: save it to iCloud Drive with “Save to Files”.",
 exportBk:"Export backup",importBk:"Import backup",footer:"Expenxe · works offline · no data leaves the phone",
 storageErr:"This browser does not allow saving data. Open the app from Safari, not in private browsing.",
 invoices:"Invoices",receipts:"Receipts",exp1:"expense",expN:"expenses",inFx:"in foreign currency",
@@ -290,17 +296,17 @@ bkNotice1:"{n} expense is not backed up yet.",bkNoticeN:"{n} expenses are not ba
 tplNotice:"Load the Estun expense template once to create the files at month end.",loadTplShort:"Load template",
 emptyMonth:"No expenses in {m}.<br>Tap <b>+ Expense</b> when you pay: amount, category, done.",moreCats:"{n} more categories",
 errAmount:"Enter an amount, e.g. 14.80.",errCat:"Choose the template category.",errDate:"Choose the date.",
-errSave:"Saving failed. Try again; if it keeps failing, export a backup from settings.",errPhoto:"This photo cannot be opened.",
+errSave:"Saving failed. Try again; if it keeps failing, export a backup from settings.",errPhoto:"This file cannot be opened.",errBig:"PDF too large (15 MB max).",errMax:"Up to 8 attachments per expense.",dup:"An identical expense already exists ({d} · {c} · {a}). Tap Save again if it really is another expense.",
 warnFx:"Day {d} has expenses in different currencies ({c}): the template has one currency per day, fix it by hand.",
 warnCells:"Some cells were not found: check that the loaded template is the right one.",
 kindInvoice:"Invoice",kindReceipt:"Receipt",reportTitle:"Expense report · {m}",totEur:"Total €",plusFx:"+ {n} in foreign currency",monthTot:"Month total",
 noTpl:"Load the expense template in settings (⚙︎) first.",building:"Filling in the templates…",ready:"Ready: {f}",and:" and ",
 errBuild:"Could not fill in the template: {e}.",badFile:"invalid file",noData:"the DATA sheet is missing",
-prepPhotos:"Preparing photos…",noPhotos:"No photos saved for this month.",photosReady:"Photos ready: {f}.",missPhotos:" Missing photos: {l}.",errPhotos:"Could not prepare the photos.",
+prepPhotos:"Preparing documents…",noPhotos:"No attachments for this month.",photosReady:"Documents ready: {f}.",missPhotos:" No attachment: {l}.",errPhotos:"Could not prepare the documents.",
 tplLoaded:"Loaded: {n}. Reload it only if the template changes.",tplNone:"No template loaded. Use the file of any month: the day rows are cleared every time.",
 tplSaved:"Template saved on the phone.",tplBad:"This file is not the expense template (the DATA sheet is missing).",
 bkReady:"Backup ready: save it to iCloud Drive.",bkErr:"Could not create the backup.",
-imported:"Imported {n} expenses{p}. Existing ones were left unchanged.",importedPh:" and {n} photos",bkBad:"This file is not an Expenxe backup."}
+imported:"Imported {n} expenses{p}. Existing ones were left unchanged.",importedPh:" and {n} attachments",bkBad:"This file is not an Expenxe backup."}
 };
 let lang=(()=>{try{const v=localStorage.getItem("expenxe.lang");if(v==="it"||v==="en")return v}catch(_){}return /^it/i.test(navigator.language||"it")?"it":"en"})();
 const t=(k,v={})=>String(I18N[lang][k]??I18N.it[k]??k).replace(/\{(\w+)\}/g,(m,x)=>v[x]??"");
@@ -352,7 +358,7 @@ const setCfg=(k,v)=>tx("cfg","readwrite",s=>s.put(v,k));
 
 /* ---------- stato ---------- */
 let lastSaved=null;
-let spese=[], month=todayISO().slice(0,7), cfg={name:"",lastDest:"",lastCur:"EUR",catUse:{}}, editing=null, photoBlob=undefined, persistAsked=false;
+let spese=[], month=todayISO().slice(0,7), cfg={name:"",lastDest:"",lastCur:"EUR",catUse:{}}, editing=null, formAtt=[], removedKeys=[], dupSig="", persistAsked=false;
 
 async function boot(){
   applyStatic();
@@ -388,7 +394,7 @@ async function render(){
     const dt=Object.keys(sums).sort((a,b)=>a==="EUR"?-1:b==="EUR"?1:0).map(c=>(c==="EUR"?"":c+" ")+fmt(sums[c])).join(" + ");
     html+='<section class="day"><div class="dayh"><span>'+esc(dayLabel(d))+'</span><span class="num">'+dt+'</span></div>'+
       list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(colName(s.col))+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
-        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(s.photo?PHOTO_ICON:"")+t(docOf(s)==="fattura"?"invoice":"receipt")+'</span>'+'</span></button>').join("")+'</section>';
+        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(attsOf(s).length?attIcon(attsOf(s).length):"")+t(docOf(s)==="fattura"?"invoice":"receipt")+'</span>'+'</span></button>').join("")+'</section>';
   }
   $("#list").innerHTML=html;
   $("#b-report").disabled=!items.length;
@@ -412,7 +418,10 @@ $("#f-cats").addEventListener("click",e=>{if(e.target.closest("#f-more")){render
   const c=e.target.closest(".chip");if(!c)return;
   $("#f-cats").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x===c)));
   if(!editing&&!docTouched){const d=(cfg.docByCol||{})[c.dataset.col];if(d)setDoc(d)}});
-const PHOTO_ICON='<svg class="pic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="foto"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const attIcon=n=>'<svg class="pic" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="allegati"><path d="M21 11.5l-8.6 8.6a5 5 0 01-7.1-7.1l8.6-8.6a3.3 3.3 0 014.7 4.7l-8.6 8.6a1.7 1.7 0 01-2.4-2.4l7.9-7.9"/></svg>'+(n>1?'<span class="pic">'+n+'</span>':"");
+/* allegati: s.att=[{k,type,name}] nel database "foto"; le spese vecchie avevano s.photo=true con chiave = id */
+function attsOf(s){if(Array.isArray(s.att))return s.att;return s.photo?[{k:s.id,type:"image/jpeg",name:""}]:[]}
+const extOf=type=>type==="application/pdf"?"pdf":"jpg";
 function docOf(s){return s.doc==="fattura"?"fattura":"scontrino"}
 function setDoc(d){$("#f-doc").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.doc===d)))}
 function currentDoc(){const b=$("#f-doc").querySelector('[aria-pressed="true"]');return b?b.dataset.doc:"fattura"}
@@ -420,7 +429,7 @@ $("#f-doc").addEventListener("click",e=>{const b=e.target.closest("button");if(b
 let docTouched=false;
 function selectedCol(){const c=$("#f-cats").querySelector('[aria-pressed="true"]');return c?c.dataset.col:null}
 async function openForm(s){
-  editing=s||null; photoBlob=undefined; docTouched=false;
+  editing=s||null; docTouched=false; dupSig=""; formAtt=(s?attsOf(s):[]).map(a=>({...a})); removedKeys=[];
   $("#f-title").textContent=t(s?"editExp":"newExp");
   $("#f-amt").value=s?fmt(s.amount):"";
   $("#f-cur").value=s?s.currency:((cfg.lastCurDate&&Math.abs(Date.parse(todayISO())-Date.parse(cfg.lastCurDate))<=2*864e5)?(cfg.lastCur||"EUR"):"EUR");
@@ -432,8 +441,8 @@ async function openForm(s){
   const dests=[...new Set(spese.map(x=>x.dest).filter(Boolean))].slice(-30);
   $("#dl-dest").innerHTML=dests.map(d=>'<option value="'+esc(d)+'">').join("");
   $("#f-del").hidden=!s; $("#f-confirm").hidden=true; setMsg("#f-msg","");
-  const img=$("#f-img"); img.hidden=true; $("#f-photo-del").hidden=true;
-  if(s&&s.photo){const b=await getFoto(s.id);if(b){img.src=URL.createObjectURL(b);img.hidden=false;$("#f-photo-del").hidden=false}}
+  for(const a of formAtt){try{const b=await getFoto(a.k);if(b)a.url=URL.createObjectURL(b)}catch(_){}}
+  renderAtt();
   $("#d-form").showModal();
   if(!s)setTimeout(()=>$("#f-amt").focus(),60); else $("#f").focus({preventScroll:true});
 }
@@ -444,13 +453,17 @@ $("#f").addEventListener("submit",async e=>{
   if(amount==null){setMsg("#f-msg",t("errAmount"),"err");$("#f-amt").focus();return}
   const col=selectedCol(); if(!col){setMsg("#f-msg",t("errCat"),"err");return}
   const date=$("#f-date").value; if(!date){setMsg("#f-msg",t("errDate"),"err");return}
+  const cur=$("#f-cur").value, sig=[date,col,amount,cur].join("|");
+  const dup=spese.find(x=>(!editing||x.id!==editing.id)&&x.date===date&&x.col===col&&x.amount===amount&&x.currency===cur);
+  if(dup&&dupSig!==sig){dupSig=sig;setMsg("#f-msg",t("dup",{d:dayLabel(date),c:colName(col),a:fmt(amount)}),"warn");return}
   const o=editing?{...editing}:{id:uid(),created:Date.now()};o.updated=Date.now();
   Object.assign(o,{amount,currency:$("#f-cur").value,col,date,dest:$("#f-dest").value.trim(),note:$("#f-note").value.trim(),doc:currentDoc()});delete o.receipt;
   cfg.docByCol=cfg.docByCol||{};cfg.docByCol[col]=o.doc;setCfg("docByCol",cfg.docByCol).catch(()=>{});
   try{
-    if(photoBlob===null){await delFoto(o.id);o.photo=false}
-    else if(photoBlob){await putFoto(o.id,photoBlob);o.photo=true}
+    for(const a of formAtt){if(!a.k&&a.blob){a.k=o.id+"_"+uid();await putFoto(a.k,a.blob)}}
+    o.att=formAtt.filter(a=>a.k).map(a=>({k:a.k,type:a.type,name:a.name||""}));o.photo=o.att.length>0;
     await putSpesa(o);
+    for(const k of removedKeys)await delFoto(k).catch(()=>{});
     if(!editing){cfg.catUse[col]=(cfg.catUse[col]||0)+1;await setCfg("catUse",cfg.catUse)}
     if(o.dest){cfg.lastDest=o.dest;await setCfg("lastDest",o.dest)}
     cfg.lastCur=o.currency;cfg.lastCurDate=todayISO();await setCfg("lastCur",o.currency);await setCfg("lastCurDate",cfg.lastCurDate);
@@ -460,17 +473,47 @@ $("#f").addEventListener("submit",async e=>{
     $("#d-form").close(); if(o.date.slice(0,7)!==month)month=o.date.slice(0,7); render();
   }catch(err){setMsg("#f-msg",t("errSave"),"err")}
 });
+function renderAtt(){
+  const box=$("#f-atts"), many=formAtt.length>1;
+  box.innerHTML=formAtt.map((a,i)=>{
+    const tag=many?'<span class="pg">'+t("page",{n:i+1})+'</span>':"";
+    const body=a.type==="application/pdf"
+      ?'<button type="button" class="pdf" data-open="'+i+'"><span class="ico">PDF</span><span><b>'+esc(a.name||"documento.pdf")+'</b><span class="small muted">'+(many?t("page",{n:i+1}):"PDF")+'</span></span></button>'
+      :(a.url?'<img src="'+a.url+'" alt="" data-zoom="'+i+'">':'<div class="pdf"><span class="ico">?</span></div>');
+    return '<div class="att">'+body+tag+'<button type="button" class="rm" data-rm="'+i+'" aria-label="'+esc(t("remove"))+'">✕</button></div>';
+  }).join("");
+  $("#f-photo-t").textContent=t(formAtt.length?"addPage":"photo");
+}
 $("#f-photo").addEventListener("change",async e=>{
-  const f=e.target.files[0];e.target.value="";if(!f)return;
-  try{photoBlob=await shrink(f);const img=$("#f-img");img.src=URL.createObjectURL(photoBlob);img.hidden=false;$("#f-photo-del").hidden=false}
-  catch(_){setMsg("#f-msg",t("errPhoto"),"err")}
+  const files=[...e.target.files];e.target.value="";if(!files.length)return;
+  setMsg("#f-msg","");
+  for(const f of files){
+    if(formAtt.length>=8){setMsg("#f-msg",t("errMax"),"err");break}
+    try{
+      if(f.type==="application/pdf"||/\.pdf$/i.test(f.name)){
+        if(f.size>15e6){setMsg("#f-msg",t("errBig"),"err");continue}
+        const blob=new Blob([await f.arrayBuffer()],{type:"application/pdf"});
+        formAtt.push({blob,type:"application/pdf",name:f.name,url:URL.createObjectURL(blob)});
+      }else{
+        const blob=await shrink(f);
+        formAtt.push({blob,type:"image/jpeg",name:"",url:URL.createObjectURL(blob)});
+      }
+    }catch(_){setMsg("#f-msg",t("errPhoto"),"err")}
+  }
+  renderAtt();
 });
-$("#f-img").onclick=()=>{$("#z-img").src=$("#f-img").src;$("#d-img").showModal()};
+$("#f-atts").addEventListener("click",e=>{
+  const rm=e.target.closest("[data-rm]");
+  if(rm){const a=formAtt.splice(+rm.dataset.rm,1)[0];if(a&&a.k)removedKeys.push(a.k);renderAtt();return}
+  const z=e.target.closest("[data-zoom]");
+  if(z){$("#z-img").src=formAtt[+z.dataset.zoom].url;$("#d-img").showModal();return}
+  const op=e.target.closest("[data-open]");
+  if(op){const a=formAtt[+op.dataset.open];if(a&&a.url){const l=document.createElement("a");l.href=a.url;l.target="_blank";l.rel="noopener";document.body.append(l);l.click();l.remove()}}
+});
 $("#d-img").addEventListener("click",e=>{if(e.target.id==="z-img"||e.target===e.currentTarget)$("#d-img").close()});
-$("#f-photo-del").onclick=()=>{photoBlob=null;$("#f-img").hidden=true;$("#f-photo-del").hidden=true};
 $("#f-del").onclick=()=>{$("#f-confirm").hidden=false};
 $("#f-del-no").onclick=()=>{$("#f-confirm").hidden=true};
-$("#f-del-yes").onclick=async()=>{if(!editing)return;await delSpesa(editing.id);await delFoto(editing.id).catch(()=>{});spese=spese.filter(s=>s.id!==editing.id);$("#d-form").close();render()};
+$("#f-del-yes").onclick=async()=>{if(!editing)return;await delSpesa(editing.id);for(const a of attsOf(editing))await delFoto(a.k).catch(()=>{});spese=spese.filter(s=>s.id!==editing.id);$("#d-form").close();render()};
 async function shrink(file){
   const url=URL.createObjectURL(file);
   const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
@@ -542,7 +585,7 @@ function openReport(){
   }
   html+='<div class="tot"><span><b>'+t("monthTot")+'</b></span><span class="v">€ '+fmt(grand)+'</span></div>';
   $("#r-body").innerHTML=html;
-  $("#r-zip").disabled=!monthItems(month).some(r=>r.photo);
+  $("#r-zip").disabled=!monthItems(month).some(r=>attsOf(r).length);
   $("#r-confirm").hidden=true; setMsg("#r-msg","");
   $("#d-rep").showModal();
 }
@@ -597,8 +640,12 @@ $("#r-zip").onclick=async()=>{
       const rows=numbered(month,k); if(!rows.length)continue;
       const zip=new JSZip(); let n=0;
       for(const r of rows){
-        const b=r.photo?await getFoto(r.id):null;
-        if(b){zip.file(r.n+".jpg",b);n++}else missing.push(k.key+" #"+r.n);
+        const as=attsOf(r); let got=0;
+        for(let i=0;i<as.length;i++){
+          const b=await getFoto(as[i].k); if(!b)continue;
+          zip.file((as.length===1?String(r.n):r.n+"-"+(i+1))+"."+extOf(as[i].type),b); got++; n++;
+        }
+        if(!got)missing.push(k.key+" #"+r.n);
       }
       if(n)out.push({blob:await zip.generateAsync({type:"blob"}),name:fileName(k.key).replace(/\.xlsx$/,".zip"),type:"application/zip"});
     }
@@ -611,7 +658,7 @@ $("#r-zip").onclick=async()=>{
 $("#r-clear").onclick=()=>{$("#r-confirm").hidden=false};
 $("#r-clear-no").onclick=()=>{$("#r-confirm").hidden=true};
 $("#r-clear-yes").onclick=async()=>{
-  for(const s of monthItems(month)){await delSpesa(s.id);if(s.photo)await delFoto(s.id).catch(()=>{})}
+  for(const s of monthItems(month)){await delSpesa(s.id);for(const a of attsOf(s))await delFoto(a.k).catch(()=>{})}
   spese=spese.filter(s=>!(s.date&&s.date.slice(0,7)===month));$("#d-rep").close();render();
 };
 
@@ -640,8 +687,8 @@ $("#s-tpl-in").addEventListener("change",async e=>{
 async function exportBackup(msgSel){
   try{
     const zip=new JSZip();
-    zip.file("backup.json",JSON.stringify({app:"expenxe",v:2,exported:new Date().toISOString(),name:cfg.name,spese}));
-    for(const x of spese){if(!x.photo)continue;const b=await getFoto(x.id);if(b)zip.file("foto/"+x.id+".jpg",b)}
+    zip.file("backup.json",JSON.stringify({app:"expenxe",v:3,exported:new Date().toISOString(),name:cfg.name,spese:spese.map(x=>({...x,att:attsOf(x)}))}));
+    for(const x of spese)for(const a of attsOf(x)){const b=await getFoto(a.k);if(b)zip.file("att/"+a.k+"."+extOf(a.type),b)}
     const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE"});
     const r=await deliver(blob,"Expenxe_backup_"+todayISO()+".zip","application/zip");
     if(r!=="cancel"){cfg.lastBackupAt=Date.now();await setCfg("lastBackupAt",cfg.lastBackupAt);render()}
@@ -660,9 +707,16 @@ $("#s-imp").addEventListener("change",async e=>{
     for(const x of d.spese){
       if(!(x&&x.id&&x.date&&typeof x.amount==="number"&&x.col))continue;
       if(spese.some(y=>y.id===x.id))continue;
-      x.doc=docOf(x);x.photo=false;
-      const pf=zip&&zip.file("foto/"+x.id+".jpg");
-      if(pf){await putFoto(x.id,await pf.async("blob"));x.photo=true;ph++}
+      x.doc=docOf(x);
+      const keep=[];
+      if(Array.isArray(x.att)){
+        for(const a of x.att){const pf=zip&&zip.file("att/"+a.k+"."+extOf(a.type));
+          if(pf){await putFoto(a.k,new Blob([await pf.async("arraybuffer")],{type:a.type}));keep.push({k:a.k,type:a.type,name:a.name||""});ph++}}
+      }else{
+        const pf=zip&&zip.file("foto/"+x.id+".jpg");
+        if(pf){await putFoto(x.id,new Blob([await pf.async("arraybuffer")],{type:"image/jpeg"}));keep.push({k:x.id,type:"image/jpeg",name:""});ph++}
+      }
+      x.att=keep;x.photo=keep.length>0;
       await putSpesa(x);spese.push(x);n++;
     }
     cfg.lastBackupAt=Date.now();await setCfg("lastBackupAt",cfg.lastBackupAt);
