@@ -388,13 +388,14 @@ async function render(){
   if(unsaved.length&&Date.now()-oldest>7*864e5)html+='<div class="notice"><span>'+t(unsaved.length===1?"bkNotice1":"bkNoticeN",{n:unsaved.length})+'</span><button class="btn" id="n-bk">'+t("saveBk")+'</button></div>';
   if(!tpl)html+='<div class="notice"><span>'+t("tplNotice")+'</span><button class="btn" id="n-tpl">'+t("loadTplShort")+'</button></div>';
   if(!items.length)html+='<div class="empty">'+t("emptyMonth",{m:esc(monthLabel(month))})+'</div>';
+  const numMap={};for(const k of KINDS)numbered(month,k).forEach(r=>numMap[r.id]=r.n);
   const byDay={};items.forEach(s=>(byDay[s.date]=byDay[s.date]||[]).push(s));
   for(const d of Object.keys(byDay).sort().reverse()){
     const list=byDay[d]; const sums={};list.forEach(s=>{sums[s.currency]=(sums[s.currency]||0)+s.amount});
     const dt=Object.keys(sums).sort((a,b)=>a==="EUR"?-1:b==="EUR"?1:0).map(c=>(c==="EUR"?"":c+" ")+fmt(sums[c])).join(" + ");
     html+='<section class="day"><div class="dayh"><span>'+esc(dayLabel(d))+'</span><span class="num">'+dt+'</span></div>'+
       list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(colName(s.col))+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
-        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(attsOf(s).length?attIcon(attsOf(s).length):"")+t(docOf(s)==="fattura"?"invoice":"receipt")+'</span>'+'</span></button>').join("")+'</section>';
+        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(attsOf(s).length?attIcon(attsOf(s).length):"")+t(docOf(s)==="fattura"?"invoice":"receipt")+' #'+(numMap[s.id]||"")+'</span>'+'</span></button>').join("")+'</section>';
   }
   $("#list").innerHTML=html;
   $("#b-report").disabled=!items.length;
