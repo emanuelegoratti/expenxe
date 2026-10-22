@@ -132,6 +132,10 @@ table{width:100%;border-collapse:collapse;font-size:.92rem;table-layout:fixed}
 td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
 th{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 td.r,th.r{text-align:right}
+.numlist{margin:6px 0 2px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--sunk)}
+.numlist summary{cursor:pointer;font-weight:600;font-size:.9rem}
+#r-body table.nl{table-layout:auto;margin-top:6px}
+#r-body table.nl td:nth-child(1){width:2.6em}#r-body table.nl td:nth-child(2){width:auto;white-space:nowrap}#r-body table.nl td:nth-child(3){width:auto}#r-body table.nl td:nth-child(4){width:auto;white-space:nowrap}
 .tot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:8px}
 .tot .v{font-family:var(--f-num);font-size:1.5rem;font-weight:600}
 .confirm{background:var(--bad-soft);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
@@ -274,7 +278,7 @@ errAmount:"Scrivi un importo, ad esempio 14,80.",errCat:"Scegli la voce del mode
 errSave:"Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup dalle impostazioni.",errPhoto:"Questo file non si riesce ad aprire.",errBig:"PDF troppo grande (massimo 15 MB).",errMax:"Massimo 8 allegati per spesa.",dup:"C'è già una spesa uguale ({d} · {c} · {a}). Tocca di nuovo Salva se è davvero un'altra spesa.",
 warnFx:"Il giorno {d} ha spese in valute diverse ({c}): il modello ha una sola valuta per giorno, correggi a mano.",
 warnCells:"Alcune celle non sono state trovate: controlla che il modello caricato sia quello giusto.",
-kindInvoice:"Invoice · fatture",kindReceipt:"Receipt · scontrini",reportTitle:"Nota spese · {m}",totEur:"Totale €",plusFx:"+ {n} in valuta",monthTot:"Totale del mese",
+numList:"Elenco numerato (per scrivere i numeri sui documenti)",kindInvoice:"Invoice · fatture",kindReceipt:"Receipt · scontrini",reportTitle:"Nota spese · {m}",totEur:"Totale €",plusFx:"+ {n} in valuta",monthTot:"Totale del mese",
 noTpl:"Prima carica il modello nota spese dalle impostazioni (⚙︎).",building:"Compilo i modelli…",ready:"Pronti: {f}",and:" e ",
 errBuild:"Non riesco a compilare il modello: {e}.",badFile:"file non valido",noData:"manca il foglio DATA",
 prepPhotos:"Preparo i documenti…",noPhotos:"Nessun allegato per questo mese.",photosReady:"Documenti pronti: {f}.",missPhotos:" Senza allegato: {l}.",errPhotos:"Non riesco a preparare i documenti.",
@@ -299,7 +303,7 @@ errAmount:"Enter an amount, e.g. 14.80.",errCat:"Choose the template category.",
 errSave:"Saving failed. Try again; if it keeps failing, export a backup from settings.",errPhoto:"This file cannot be opened.",errBig:"PDF too large (15 MB max).",errMax:"Up to 8 attachments per expense.",dup:"An identical expense already exists ({d} · {c} · {a}). Tap Save again if it really is another expense.",
 warnFx:"Day {d} has expenses in different currencies ({c}): the template has one currency per day, fix it by hand.",
 warnCells:"Some cells were not found: check that the loaded template is the right one.",
-kindInvoice:"Invoice",kindReceipt:"Receipt",reportTitle:"Expense report · {m}",totEur:"Total €",plusFx:"+ {n} in foreign currency",monthTot:"Month total",
+numList:"Numbered list (to write the numbers on the documents)",kindInvoice:"Invoice",kindReceipt:"Receipt",reportTitle:"Expense report · {m}",totEur:"Total €",plusFx:"+ {n} in foreign currency",monthTot:"Month total",
 noTpl:"Load the expense template in settings (⚙︎) first.",building:"Filling in the templates…",ready:"Ready: {f}",and:" and ",
 errBuild:"Could not fill in the template: {e}.",badFile:"invalid file",noData:"the DATA sheet is missing",
 prepPhotos:"Preparing documents…",noPhotos:"No attachments for this month.",photosReady:"Documents ready: {f}.",missPhotos:" No attachment: {l}.",errPhotos:"Could not prepare the documents.",
@@ -388,14 +392,13 @@ async function render(){
   if(unsaved.length&&Date.now()-oldest>7*864e5)html+='<div class="notice"><span>'+t(unsaved.length===1?"bkNotice1":"bkNoticeN",{n:unsaved.length})+'</span><button class="btn" id="n-bk">'+t("saveBk")+'</button></div>';
   if(!tpl)html+='<div class="notice"><span>'+t("tplNotice")+'</span><button class="btn" id="n-tpl">'+t("loadTplShort")+'</button></div>';
   if(!items.length)html+='<div class="empty">'+t("emptyMonth",{m:esc(monthLabel(month))})+'</div>';
-  const numMap={};for(const k of KINDS)numbered(month,k).forEach(r=>numMap[r.id]=r.n);
   const byDay={};items.forEach(s=>(byDay[s.date]=byDay[s.date]||[]).push(s));
   for(const d of Object.keys(byDay).sort().reverse()){
     const list=byDay[d]; const sums={};list.forEach(s=>{sums[s.currency]=(sums[s.currency]||0)+s.amount});
     const dt=Object.keys(sums).sort((a,b)=>a==="EUR"?-1:b==="EUR"?1:0).map(c=>(c==="EUR"?"":c+" ")+fmt(sums[c])).join(" + ");
     html+='<section class="day"><div class="dayh"><span>'+esc(dayLabel(d))+'</span><span class="num">'+dt+'</span></div>'+
       list.map(s=>'<button class="item" data-id="'+s.id+'"><span class="badge">'+s.col+'</span><span class="t"><b>'+esc(colName(s.col))+'</b><span>'+esc([s.dest,s.note].filter(Boolean).join(" · ")||"—")+'</span></span>'+
-        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(attsOf(s).length?attIcon(attsOf(s).length):"")+t(docOf(s)==="fattura"?"invoice":"receipt")+' #'+(numMap[s.id]||"")+'</span>'+'</span></button>').join("")+'</section>';
+        '<span class="a">'+(s.currency!=="EUR"?esc(s.currency)+" ":"")+fmt(s.amount)+'<span class="doc '+docOf(s)+'">'+(attsOf(s).length?attIcon(attsOf(s).length):"")+t(docOf(s)==="fattura"?"invoice":"receipt")+'</span>'+'</span></button>').join("")+'</section>';
   }
   $("#list").innerHTML=html;
   $("#b-report").disabled=!items.length;
@@ -582,7 +585,9 @@ function openReport(){
     const sm=summary(rows); grand+=sm.tot;
     html+='<h3 style="margin:10px 0 4px;font-size:1rem">'+esc(t(k.lk))+' <span class="muted small">'+rows.length+" "+(rows.length===1?t("exp1"):t("expN"))+'</span></h3>'+
       '<table><tbody>'+"GHIJKLMNOPQRSTU".split("").filter(c=>sm.by[c]).map(c=>'<tr><td class="num" style="width:2em">'+c+'</td><td>'+esc(colName(c))+'</td><td class="r num">'+sm.by[c].n+'</td><td class="r num">'+fmt(sm.by[c].t)+'</td></tr>').join("")+
-      '<tr><td></td><td><b>'+t("totEur")+'</b>'+(sm.fx?' <span class="small" style="color:var(--warn)">'+t("plusFx",{n:sm.fx})+'</span>':'')+'</td><td></td><td class="r num"><b>'+fmt(sm.tot)+'</b></td></tr></tbody></table>';
+      '</tbody></table><details class="numlist"><summary>'+t("numList")+'</summary><table class="nl"><tbody>'+
+      rows.map(r=>'<tr><td class="num">#'+r.n+'</td><td>'+esc(dayLabel(r.date))+'</td><td>'+esc(colName(r.col))+(r.dest?'<span class="small muted"> · '+esc(r.dest)+'</span>':'')+'</td><td class="r num">'+(r.currency!=="EUR"?esc(r.currency)+" ":"")+fmt(r.amount)+'</td></tr>').join("")+
+      '</tbody></table></details><table><tbody><tr><td></td><td><b>'+t("totEur")+'</b>'+(sm.fx?' <span class="small" style="color:var(--warn)">'+t("plusFx",{n:sm.fx})+'</span>':'')+'</td><td></td><td class="r num"><b>'+fmt(sm.tot)+'</b></td></tr></tbody></table>';
   }
   html+='<div class="tot"><span><b>'+t("monthTot")+'</b></span><span class="v">€ '+fmt(grand)+'</span></div>';
   $("#r-body").innerHTML=html;
