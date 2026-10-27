@@ -119,6 +119,17 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 #d-img{max-width:none;max-height:none;width:100%;height:100%;margin:0;border-radius:0;background:#000}
 #d-img img{width:100%;height:100%;object-fit:contain;display:block;touch-action:pinch-zoom}
 #d-img .iconbtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 12px);color:#fff;background:rgba(0,0,0,.55);border-radius:50%;width:44px;height:44px;padding:0}
+.att .cr{position:absolute;right:8px;bottom:8px;border:0;border-radius:19px;height:38px;padding:0 14px;background:rgba(0,0,0,.62);color:#fff;font-weight:650;font-size:.9rem;cursor:pointer}
+#d-crop{max-width:none;max-height:none;width:100%;height:100%;margin:0;border-radius:0;background:#000;color:#fff}
+.crop{display:flex;flex-direction:column;height:100%;padding:calc(env(safe-area-inset-top,0px) + 6px) max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.croph{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.cstage{position:relative;flex:1;min-height:0;margin:4px 0;touch-action:none;user-select:none;-webkit-user-select:none}
+.cbox{position:absolute}
+.cbox canvas{display:block;width:100%;height:100%}
+.cbox svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.loupe{position:absolute;top:8px;width:120px;height:120px;border-radius:50%;border:2px solid #fff;pointer-events:none;background:#000}
+.chint{margin:0 0 10px;text-align:center;font-size:.88rem;opacity:.8}
+#d-crop .btn:not(.primary){background:#1d1d1d;border-color:#444;color:#fff}
 .filebtn{position:relative;overflow:hidden;display:inline-flex}
 .filebtn input{position:absolute;inset:0;opacity:0}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
@@ -205,6 +216,16 @@ td.r,th.r{text-align:right}
 <!-- foto a schermo intero -->
 <dialog id="d-img"><img id="z-img" alt=""><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi">✕</button></dialog>
 
+<!-- ritaglio sul foglio -->
+<dialog id="d-crop" aria-labelledby="c-title">
+  <div class="crop">
+    <div class="croph"><span id="c-title" data-i18n="cropTitle">Ritaglia sul foglio</span><button class="iconbtn" type="button" data-close data-i18n-aria="cancel" aria-label="Annulla">✕</button></div>
+    <div class="cstage" id="c-stage"><div class="cbox" id="c-box"><canvas id="c-cv"></canvas><svg id="c-svg"></svg></div><canvas class="loupe" id="c-loupe" width="240" height="240" hidden></canvas></div>
+    <p class="chint" data-i18n="cropHint">Trascina gli angoli sui bordi del foglio.</p>
+    <div class="actions"><button class="btn" type="button" id="c-full" data-i18n="cropFull">Foto intera</button><button class="btn primary" type="button" id="c-ok" data-i18n="cropDo">Ritaglia</button></div>
+  </div>
+</dialog>
+
 <!-- report -->
 <dialog id="d-rep" aria-labelledby="r-title">
   <div class="sheet">
@@ -249,8 +270,8 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="21";
-/* ---------- voci del modello Estun: colonne G..U del foglio DATA ---------- */
+const APP_VERSION="22";
+/* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
   ["R","Regali a clienti","Gifts to customers"],["J","Auto: lavaggio, ricambi","Car wash, small parts"],["I","Cena (se non compresa in hotel)","Food (evening)"]];
@@ -264,7 +285,8 @@ const $=s=>document.querySelector(s);
 const I18N={
 it:{settings:"Impostazioni",prevMonth:"Mese precedente",nextMonth:"Mese successivo",report:"Nota spese",add:"+ Spesa",newExp:"Nuova spesa",editExp:"Modifica spesa",close:"Chiudi",
 amount:"Importo",currency:"Valuta",category:"Voce del modello",date:"Data",dest:"Destinazione",destPh:"Città, cliente",note:"Nota (facoltativa)",notePh:"Es. pranzo con tecnico cliente",
-doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Aggiungi foto o PDF",addPage:"Aggiungi pagina",remove:"Rimuovi",page:"pag. {n}",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",delete:"Elimina",save:"Salva",
+doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Aggiungi foto o PDF",addPage:"Aggiungi pagina",remove:"Rimuovi",page:"pag. {n}",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",
+cropTitle:"Ritaglia sul foglio",cropHint:"Trascina gli angoli sui bordi del foglio.",cropDo:"Ritaglia",cropFull:"Foto intera",crop:"✂︎ Ritaglia",delete:"Elimina",save:"Salva",
 genFiles:"Genera Invoice e Receipt",zipPhotos:"Documenti (.zip)",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
 clearWarn:"Cancella dal telefono tutte le spese e gli allegati di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.",
 language:"Lingua",name:"Nome e cognome",namePh:"Come nel modello",tplTitle:"Modello nota spese",loadTpl:"Carica modello (.xlsx)",backup:"Backup",
@@ -273,7 +295,7 @@ exportBk:"Esporta backup",importBk:"Importa backup",footer:"Expenxe · funziona 
 storageErr:"Il browser non permette di salvare dati. Apri l'app da Safari, non in navigazione privata.",
 invoices:"Fatture",receipts:"Scontrini",exp1:"spesa",expN:"spese",inFx:"in valuta",
 bkNotice1:"{n} spesa non è ancora nel backup.",bkNoticeN:"{n} spese non sono ancora nel backup.",saveBk:"Salva backup",
-tplNotice:"Carica una volta il modello nota spese Estun per poter generare il file a fine mese.",loadTplShort:"Carica modello",
+tplNotice:"Carica una volta il modello nota spese per poter generare il file a fine mese.",loadTplShort:"Carica modello",
 emptyMonth:"Nessuna spesa in {m}.<br>Tocca <b>+ Spesa</b> quando paghi: importo, voce, fatto.",moreCats:"Altre {n} voci",
 errAmount:"Scrivi un importo, ad esempio 14,80.",errCat:"Scegli la voce del modello.",errDate:"Scegli la data.",
 errSave:"Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup dalle impostazioni.",errPhoto:"Questo file non si riesce ad aprire.",errBig:"PDF troppo grande (massimo 15 MB).",errMax:"Massimo 8 allegati per spesa.",dup:"C'è già una spesa uguale ({d} · {c} · {a}). Tocca di nuovo Salva se è davvero un'altra spesa.",
@@ -289,7 +311,8 @@ bkReady:"Backup pronto: salvalo su iCloud Drive.",bkErr:"Non riesco a creare il 
 imported:"Importate {n} spese{p}. Quelle già presenti sono state lasciate com'erano.",importedPh:" e {n} allegati",bkBad:"Questo file non è un backup di Expenxe."},
 en:{settings:"Settings",prevMonth:"Previous month",nextMonth:"Next month",report:"Expense report",add:"+ Expense",newExp:"New expense",editExp:"Edit expense",close:"Close",
 amount:"Amount",currency:"Currency",category:"Template category",date:"Date",dest:"Destination",destPh:"Town, company",note:"Note (optional)",notePh:"E.g. lunch with customer technician",
-doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Add photo or PDF",addPage:"Add page",remove:"Remove",page:"p. {n}",confirmDel:"Delete this expense?",cancel:"Cancel",delete:"Delete",save:"Save",
+doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Add photo or PDF",addPage:"Add page",remove:"Remove",page:"p. {n}",confirmDel:"Delete this expense?",cancel:"Cancel",
+cropTitle:"Crop to the paper",cropHint:"Drag the corners onto the edges of the paper.",cropDo:"Crop",cropFull:"Whole photo",crop:"✂︎ Crop",delete:"Delete",save:"Save",
 genFiles:"Create Invoice and Receipt",zipPhotos:"Documents (.zip)",clearMonth:"Delete month…",clearYes:"Delete the month",
 clearWarn:"Deletes all expenses and attachments of this month from the phone, with no way to recover them. Not needed to free up space: do it only if you really want them gone.",
 language:"Language",name:"Full name",namePh:"As in the template",tplTitle:"Expense template",loadTpl:"Load template (.xlsx)",backup:"Backup",
@@ -298,7 +321,7 @@ exportBk:"Export backup",importBk:"Import backup",footer:"Expenxe · works offli
 storageErr:"This browser does not allow saving data. Open the app from Safari, not in private browsing.",
 invoices:"Invoices",receipts:"Receipts",exp1:"expense",expN:"expenses",inFx:"in foreign currency",
 bkNotice1:"{n} expense is not backed up yet.",bkNoticeN:"{n} expenses are not backed up yet.",saveBk:"Back up now",
-tplNotice:"Load the Estun expense template once to create the files at month end.",loadTplShort:"Load template",
+tplNotice:"Load the expense template once to create the files at month end.",loadTplShort:"Load template",
 emptyMonth:"No expenses in {m}.<br>Tap <b>+ Expense</b> when you pay: amount, category, done.",moreCats:"{n} more categories",
 errAmount:"Enter an amount, e.g. 14.80.",errCat:"Choose the template category.",errDate:"Choose the date.",
 errSave:"Saving failed. Try again; if it keeps failing, export a backup from settings.",errPhoto:"This file cannot be opened.",errBig:"PDF too large (15 MB max).",errMax:"Up to 8 attachments per expense.",dup:"An identical expense already exists ({d} · {c} · {a}). Tap Save again if it really is another expense.",
@@ -493,7 +516,7 @@ function renderAtt(){
     const tag=many?'<span class="pg">'+t("page",{n:i+1})+'</span>':"";
     const body=a.type==="application/pdf"
       ?'<button type="button" class="pdf" data-open="'+i+'"><span class="ico">PDF</span><span><b>'+esc(a.name||"documento.pdf")+'</b><span class="small muted">'+(many?t("page",{n:i+1}):"PDF")+'</span></span></button>'
-      :(a.url?'<img src="'+a.url+'" alt="" data-zoom="'+i+'">':'<div class="pdf"><span class="ico">?</span></div>');
+      :(a.url?'<img src="'+a.url+'" alt="" data-zoom="'+i+'"><button type="button" class="cr" data-crop="'+i+'">'+esc(t("crop"))+'</button>':'<div class="pdf"><span class="ico">?</span></div>');
     return '<div class="att">'+body+tag+'<button type="button" class="rm" data-rm="'+i+'" aria-label="'+esc(t("remove"))+'">✕</button></div>';
   }).join("");
   $("#f-photo-t").textContent=t(formAtt.length?"addPage":"photo");
@@ -509,7 +532,8 @@ $("#f-photo").addEventListener("change",async e=>{
         const blob=new Blob([await f.arrayBuffer()],{type:"application/pdf"});
         formAtt.push({blob,type:"application/pdf",name:f.name,url:URL.createObjectURL(blob)});
       }else{
-        const blob=await shrink(f);
+        const r=await cropPhoto(f);if(!r)continue;
+        const blob=r.blob||await shrink(f);
         formAtt.push({blob,type:"image/jpeg",name:"",url:URL.createObjectURL(blob)});
       }
     }catch(_){setMsg("#f-msg",t("errPhoto"),"err")}
@@ -519,6 +543,11 @@ $("#f-photo").addEventListener("change",async e=>{
 $("#f-atts").addEventListener("click",e=>{
   const rm=e.target.closest("[data-rm]");
   if(rm){const a=formAtt.splice(+rm.dataset.rm,1)[0];if(a&&a.k)removedKeys.push(a.k);renderAtt();return}
+  const cr=e.target.closest("[data-crop]");
+  if(cr){(async()=>{const a=formAtt[+cr.dataset.crop];if(!a)return;
+    try{const src=a.blob||await getFoto(a.k);if(!src)return;const r=await cropPhoto(src);if(!r||!r.blob)return;
+      if(a.k){removedKeys.push(a.k);delete a.k}if(a.url)URL.revokeObjectURL(a.url);a.blob=r.blob;a.url=URL.createObjectURL(r.blob);renderAtt();
+    }catch(_){setMsg("#f-msg",t("errPhoto"),"err")}})();return}
   const z=e.target.closest("[data-zoom]");
   if(z){$("#z-img").src=formAtt[+z.dataset.zoom].url;$("#d-img").showModal();return}
   const op=e.target.closest("[data-open]");
@@ -536,6 +565,150 @@ async function shrink(file){
   c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
   return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(),"image/jpeg",0.8));
 }
+
+/* ---------- ritaglio sul foglio: angoli trovati in automatico, spostabili a mano, poi foglio raddrizzato ---------- */
+function loadImg(blob){const url=URL.createObjectURL(blob);return new Promise((res,rej)=>{const i=new Image();i.onload=()=>{URL.revokeObjectURL(url);res(i)};i.onerror=e=>{URL.revokeObjectURL(url);rej(e)};i.src=url})}
+function boxBlur(g,w,h,r){
+  const tmp=new Float32Array(w*h),out=new Float32Array(w*h);
+  for(let y=0;y<h;y++){let s=0;const o=y*w;for(let x=-r;x<=r;x++)s+=g[o+Math.min(w-1,Math.max(0,x))];
+    for(let x=0;x<w;x++){tmp[o+x]=s/(2*r+1);s+=g[o+Math.min(w-1,x+r+1)]-g[o+Math.max(0,x-r)]}}
+  for(let x=0;x<w;x++){let s=0;for(let y=-r;y<=r;y++)s+=tmp[Math.min(h-1,Math.max(0,y))*w+x];
+    for(let y=0;y<h;y++){out[y*w+x]=s/(2*r+1);s+=tmp[Math.min(h-1,y+r+1)*w+x]-tmp[Math.max(0,y-r)*w+x]}}
+  return out;
+}
+/* il foglio è la macchia (chiara o scura, soglia di Otsu) più grande che tocca meno i bordi della foto */
+function findPaper(src){
+  const k=Math.min(1,360/Math.max(src.width,src.height)),w=Math.max(2,Math.round(src.width*k)),h=Math.max(2,Math.round(src.height*k)),n=w*h;
+  const c=document.createElement("canvas");c.width=w;c.height=h;const cx=c.getContext("2d",{willReadFrequently:true});cx.drawImage(src,0,0,w,h);
+  const d=cx.getImageData(0,0,w,h).data;let g=new Float32Array(n);
+  for(let i=0;i<n;i++)g[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];
+  g=boxBlur(boxBlur(g,w,h,2),w,h,2);
+  const hist=new Float64Array(256);let sum=0;for(let i=0;i<n;i++){hist[g[i]|0]++;sum+=g[i]|0}
+  let sB=0,wB=0,best=-1,th=128;
+  for(let i=0;i<256;i++){wB+=hist[i];if(!wB)continue;const wF=n-wB;if(!wF)break;sB+=i*hist[i];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>best){best=v;th=i}}
+  const lab=new Int32Array(n),st=new Int32Array(n),per=2*(w+h);let pick=null,id=0;
+  for(const bright of [true,false]){
+    const m=new Uint8Array(n);for(let i=0;i<n;i++)m[i]=(g[i]>th)===bright?1:0;
+    for(let s=0;s<n;s++){if(!m[s]||lab[s])continue;id++;let top=0,area=0,edge=0;st[top++]=s;lab[s]=id;
+      while(top){const p=st[--top],x=p%w,y=(p-x)/w;area++;if(x===0||y===0||x===w-1||y===h-1)edge++;
+        if(x>0&&m[p-1]&&!lab[p-1]){lab[p-1]=id;st[top++]=p-1}
+        if(x<w-1&&m[p+1]&&!lab[p+1]){lab[p+1]=id;st[top++]=p+1}
+        if(y>0&&m[p-w]&&!lab[p-w]){lab[p-w]=id;st[top++]=p-w}
+        if(y<h-1&&m[p+w]&&!lab[p+w]){lab[p+w]=id;st[top++]=p+w}}
+      const score=area*Math.max(0,1-edge/per*2)*(bright?1:.8);
+      if(!pick||score>pick.score)pick={id,score}}
+  }
+  if(!pick||pick.score<.08*n)return null;
+  const pts=[];
+  for(let y=0;y<h;y++){let a=-1,b=-1;for(let x=0;x<w;x++)if(lab[y*w+x]===pick.id){if(a<0)a=x;b=x}if(a>=0){pts.push([a,y+.5],[b+1,y+.5])}}
+  const hp=hull(pts);if(hp.length<4)return null;
+  let q=hp.slice();
+  const tri=(a,b,c)=>Math.abs((b[0]-a[0])*(c[1]-a[1])-(c[0]-a[0])*(b[1]-a[1]));
+  while(q.length>4){let mi=0,mv=Infinity;for(let i=0;i<q.length;i++){const v=tri(q[(i+q.length-1)%q.length],q[i],q[(i+1)%q.length]);if(v<mv){mv=v;mi=i}}q.splice(mi,1)}
+  /* affina: sposta ogni angolo sul vertice dell'involucro che dà il quadrilatero più grande */
+  for(let it=0,better=true;better&&it<20;it++){better=false;
+    for(let i=0;i<4;i++){let a=quadArea(q),bv=q[i];for(const v of hp){q[i]=v;const na=quadArea(q);if(na>a+1e-6&&quadOk(q,1,1)){a=na;bv=v;better=true}}q[i]=bv}}
+  q=orderQuad(q.map(([x,y])=>[Math.min(src.width,Math.max(0,x/k)),Math.min(src.height,Math.max(0,y/k))]));
+  return quadArea(q)>.1*src.width*src.height?q:null;
+}
+function hull(p){
+  p=p.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo=[],up=[];
+  for(const v of p){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],v)<=0)lo.pop();lo.push(v)}
+  for(let i=p.length-1;i>=0;i--){const v=p[i];while(up.length>1&&cr(up[up.length-2],up[up.length-1],v)<=0)up.pop();up.push(v)}
+  return lo.slice(0,-1).concat(up.slice(0,-1));
+}
+/* ordine: alto-sinistra, alto-destra, basso-destra, basso-sinistra */
+function orderQuad(q){
+  const cx=q.reduce((s,v)=>s+v[0],0)/4,cy=q.reduce((s,v)=>s+v[1],0)/4;
+  q=q.slice().sort((a,b)=>Math.atan2(a[1]-cy,a[0]-cx)-Math.atan2(b[1]-cy,b[0]-cx));
+  let s=0;for(let i=1;i<4;i++)if(q[i][0]+q[i][1]<q[s][0]+q[s][1])s=i;
+  return q.slice(s).concat(q.slice(0,s));
+}
+function quadArea(q){let a=0;for(let i=0;i<4;i++){const p=q[i],r=q[(i+1)%4];a+=p[0]*r[1]-r[0]*p[1]}return Math.abs(a)/2}
+function quadOk(q,W,H){
+  let sg=0;for(let i=0;i<4;i++){const a=q[i],b=q[(i+1)%4],c=q[(i+2)%4],z=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);if(Math.abs(z)<1e-6)return false;const s=Math.sign(z);if(sg&&s!==sg)return false;sg=s}
+  return quadArea(q)>.01*W*H;
+}
+/* omografia che porta i 4 punti "from" sui 4 punti "to" */
+function homography(from,to){
+  const A=[],b=[];
+  for(let i=0;i<4;i++){const [u,v]=from[i],[x,y]=to[i];A.push([u,v,1,0,0,0,-u*x,-v*x]);b.push(x);A.push([0,0,0,u,v,1,-u*y,-v*y]);b.push(y)}
+  for(let c=0;c<8;c++){let p=c;for(let r=c+1;r<8;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;
+    [A[c],A[p]]=[A[p],A[c]];[b[c],b[p]]=[b[p],b[c]];
+    for(let r=0;r<8;r++){if(r===c)continue;const f=A[r][c]/A[c][c];for(let k=c;k<8;k++)A[r][k]-=f*A[c][k];b[r]-=f*b[c]}}
+  return b.map((v,i)=>v/A[i][i]);
+}
+async function warp(src,q){
+  const L=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  let W=Math.max(L(q[0],q[1]),L(q[3],q[2])),H=Math.max(L(q[0],q[3]),L(q[1],q[2]));
+  const k=Math.min(1,1600/Math.max(W,H));W=Math.max(1,Math.round(W*k));H=Math.max(1,Math.round(H*k));
+  const m=homography([[0,0],[W,0],[W,H],[0,H]],q),sw=src.width,sh=src.height,s=src.getContext("2d").getImageData(0,0,sw,sh).data;
+  const out=document.createElement("canvas");out.width=W;out.height=H;const ox=out.getContext("2d"),od=ox.createImageData(W,H),o=od.data;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const u=x+.5,v=y+.5,z=m[6]*u+m[7]*v+1;
+    const sx=Math.min(Math.max((m[0]*u+m[1]*v+m[2])/z-.5,0),sw-1.001),sy=Math.min(Math.max((m[3]*u+m[4]*v+m[5])/z-.5,0),sh-1.001);
+    const x0=sx|0,y0=sy|0,fx=sx-x0,fy=sy-y0,i0=(y0*sw+x0)*4,i1=i0+sw*4,j=(y*W+x)*4;
+    for(let c=0;c<3;c++)o[j+c]=(s[i0+c]*(1-fx)+s[i0+4+c]*fx)*(1-fy)+(s[i1+c]*(1-fx)+s[i1+4+c]*fx)*fy;
+    o[j+3]=255;
+  }
+  ox.putImageData(od,0,0);
+  return await new Promise((res,rej)=>out.toBlob(b=>b?res(b):rej(),"image/jpeg",0.8));
+}
+/* apre il ritaglio: {blob} se ritagliata, {} se "foto intera", null se annullato */
+let crop=null;
+async function cropPhoto(file){
+  const img=await loadImg(file),k=Math.min(1,2000/Math.max(img.naturalWidth,img.naturalHeight));
+  const src=document.createElement("canvas");src.width=Math.max(1,Math.round(img.naturalWidth*k));src.height=Math.max(1,Math.round(img.naturalHeight*k));
+  src.getContext("2d",{willReadFrequently:true}).drawImage(img,0,0,src.width,src.height);
+  const W=src.width,H=src.height,mg=Math.round(Math.min(W,H)*.06);
+  let q=null;try{q=findPaper(src)}catch(_){}
+  q=q||[[mg,mg],[W-mg,mg],[W-mg,H-mg],[mg,H-mg]];
+  const cv=$("#c-cv"),dk=Math.min(1,1400/Math.max(W,H));cv.width=Math.round(W*dk);cv.height=Math.round(H*dk);cv.getContext("2d").drawImage(src,0,0,cv.width,cv.height);
+  crop={src,q,drag:-1,s:1,result:null};
+  $("#d-crop").showModal();layoutCrop();
+  const r=await new Promise(res=>{crop.done=res});
+  const c=crop;crop=null;
+  if(r==="crop")return {blob:await warp(c.src,c.q)};
+  return r==="full"?{}:null;
+}
+function layoutCrop(){
+  if(!crop)return;const st=$("#c-stage"),pad=22,{src}=crop;
+  const s=Math.max(.01,Math.min((st.clientWidth-2*pad)/src.width,(st.clientHeight-2*pad)/src.height)),bw=src.width*s,bh=src.height*s;crop.s=s;
+  Object.assign($("#c-box").style,{width:bw+"px",height:bh+"px",left:(st.clientWidth-bw)/2+"px",top:(st.clientHeight-bh)/2+"px"});
+  drawCrop();
+}
+function drawCrop(){
+  const {q,s,src}=crop,p=q.map(([x,y])=>(x*s).toFixed(1)+" "+(y*s).toFixed(1)),poly="M"+p.join("L")+"Z";
+  $("#c-svg").innerHTML='<path d="M-9999 -9999H9999V9999H-9999Z'+poly+'" fill="rgba(0,0,0,.55)" fill-rule="evenodd"/><path d="'+poly+'" fill="none" style="stroke:var(--accent)" stroke-width="2"/>'
+    +q.map(([x,y],i)=>'<circle cx="'+x*s+'" cy="'+y*s+'" r="'+(i===crop.drag?18:13)+'" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="2"/>').join("");
+  $("#c-ok").disabled=!quadOk(q,src.width,src.height);
+}
+function drawLoupe(){
+  const L=$("#c-loupe"),{src,q,s,drag}=crop;if(drag<0){L.hidden=true;return}
+  const lx=L.getContext("2d"),n=L.width,sz=120/(s*3),[x,y]=q[drag],st=$("#c-stage"),b=$("#c-box");
+  lx.fillStyle="#000";lx.fillRect(0,0,n,n);lx.drawImage(src,x-sz/2,y-sz/2,sz,sz,0,0,n,n);
+  lx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--accent")||"#4cc29c";lx.lineWidth=2;
+  lx.beginPath();lx.moveTo(n/2,0);lx.lineTo(n/2,n);lx.moveTo(0,n/2);lx.lineTo(n,n/2);lx.stroke();
+  L.style.left=(b.offsetLeft+x*s<st.clientWidth/2?st.clientWidth-130:10)+"px";L.hidden=false;
+}
+function moveCorner(e){
+  const r=$("#c-box").getBoundingClientRect(),{src,s,off,drag}=crop;
+  crop.q[drag]=[Math.min(src.width,Math.max(0,(e.clientX-r.left+off[0])/s)),Math.min(src.height,Math.max(0,(e.clientY-r.top+off[1])/s))];
+  drawCrop();drawLoupe();
+}
+$("#c-stage").addEventListener("pointerdown",e=>{
+  if(!crop)return;const r=$("#c-box").getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  let bi=-1,bd=48;crop.q.forEach(([qx,qy],i)=>{const d=Math.hypot(qx*crop.s-x,qy*crop.s-y);if(d<bd){bd=d;bi=i}});
+  if(bi<0)return;e.preventDefault();
+  crop.drag=bi;crop.off=[crop.q[bi][0]*crop.s-x,crop.q[bi][1]*crop.s-y];$("#c-stage").setPointerCapture(e.pointerId);drawCrop();drawLoupe();
+});
+$("#c-stage").addEventListener("pointermove",e=>{if(crop&&crop.drag>=0)moveCorner(e)});
+const endDrag=()=>{if(crop&&crop.drag>=0){crop.drag=-1;drawCrop();drawLoupe()}};
+$("#c-stage").addEventListener("pointerup",endDrag);$("#c-stage").addEventListener("pointercancel",endDrag);
+window.addEventListener("resize",layoutCrop);
+$("#c-ok").onclick=()=>{crop.result="crop";$("#d-crop").close()};
+$("#c-full").onclick=()=>{crop.result="full";$("#d-crop").close()};
+$("#d-crop").addEventListener("close",()=>{if(crop&&crop.done)crop.done(crop.result)});
 
 /* ---------- dialog ---------- */
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());

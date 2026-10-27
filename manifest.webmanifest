@@ -1,7 +1,7 @@
 {
   "name": "Expenxe",
   "short_name": "Expenxe",
-  "description": "Spese di lavoro in pochi secondi, nota spese Estun a fine mese.",
+  "description": "Spese di lavoro in pochi secondi, nota spese a fine mese.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
