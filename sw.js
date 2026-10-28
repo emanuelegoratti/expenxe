@@ -1,6 +1,6 @@
 /* Cache dell'app per l'uso offline. Cambia VERSION a ogni aggiornamento dei file (e APP_VERSION in index.html). */
-const VERSION = "expenxe-22";
-const FILES = ["./", "index.html", "jszip.min.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+const VERSION = "expenxe-23";
+const FILES = ["./", "index.html", "jszip.min.js", "pdf-lib.min.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
   /* cache:"reload" scavalca la cache HTTP del browser, così non si salva una versione vecchia */
