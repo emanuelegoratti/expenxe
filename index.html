@@ -236,6 +236,7 @@ td.r,th.r{text-align:right}
     <div class="actions">
       <button class="btn primary" id="r-xlsx" data-i18n="genFiles">Genera Invoice e Receipt</button>
       <button class="btn" id="r-zip" data-i18n="zipPhotos">Foto documenti (.zip)</button>
+      <button class="btn" id="r-pdf" data-i18n="pdfDocs">Documenti (.pdf)</button>
     </div>
     <div class="actions"><button class="btn danger" id="r-clear" data-i18n="clearMonth">Cancella mese…</button></div>
     <div class="confirm" id="r-confirm" hidden>
@@ -270,7 +271,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="22";
+const APP_VERSION="23";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -287,7 +288,7 @@ it:{settings:"Impostazioni",prevMonth:"Mese precedente",nextMonth:"Mese successi
 amount:"Importo",currency:"Valuta",category:"Voce del modello",date:"Data",dest:"Destinazione",destPh:"Città, cliente",note:"Nota (facoltativa)",notePh:"Es. pranzo con tecnico cliente",
 doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Aggiungi foto o PDF",addPage:"Aggiungi pagina",remove:"Rimuovi",page:"pag. {n}",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",
 cropTitle:"Ritaglia sul foglio",cropHint:"Trascina gli angoli sui bordi del foglio.",cropDo:"Ritaglia",cropFull:"Foto intera",crop:"✂︎ Ritaglia",delete:"Elimina",save:"Salva",
-genFiles:"Genera Invoice e Receipt",zipPhotos:"Documenti (.zip)",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
+genFiles:"Genera Invoice e Receipt",zipPhotos:"Documenti (.zip)",pdfDocs:"Documenti (.pdf)",noAtt:"Nessun allegato",pdfBad:"PDF non leggibile: invialo a parte",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
 clearWarn:"Cancella dal telefono tutte le spese e gli allegati di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.",
 language:"Lingua",name:"Nome e cognome",namePh:"Come nel modello",tplTitle:"Modello nota spese",loadTpl:"Carica modello (.xlsx)",backup:"Backup",
 backupInfo:"Spese e allegati sono salvati solo su questo telefono. Il backup è un file .zip con spese e allegati: salvalo su iCloud Drive con «Salva su File».",
@@ -313,7 +314,7 @@ en:{settings:"Settings",prevMonth:"Previous month",nextMonth:"Next month",report
 amount:"Amount",currency:"Currency",category:"Template category",date:"Date",dest:"Destination",destPh:"Town, company",note:"Note (optional)",notePh:"E.g. lunch with customer technician",
 doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Add photo or PDF",addPage:"Add page",remove:"Remove",page:"p. {n}",confirmDel:"Delete this expense?",cancel:"Cancel",
 cropTitle:"Crop to the paper",cropHint:"Drag the corners onto the edges of the paper.",cropDo:"Crop",cropFull:"Whole photo",crop:"✂︎ Crop",delete:"Delete",save:"Save",
-genFiles:"Create Invoice and Receipt",zipPhotos:"Documents (.zip)",clearMonth:"Delete month…",clearYes:"Delete the month",
+genFiles:"Create Invoice and Receipt",zipPhotos:"Documents (.zip)",pdfDocs:"Documents (.pdf)",noAtt:"No attachment",pdfBad:"PDF cannot be read: send it separately",clearMonth:"Delete month…",clearYes:"Delete the month",
 clearWarn:"Deletes all expenses and attachments of this month from the phone, with no way to recover them. Not needed to free up space: do it only if you really want them gone.",
 language:"Language",name:"Full name",namePh:"As in the template",tplTitle:"Expense template",loadTpl:"Load template (.xlsx)",backup:"Backup",
 backupInfo:"Expenses and attachments are stored only on this phone. The backup is a .zip file with expenses and attachments: save it to iCloud Drive with “Save to Files”.",
@@ -774,7 +775,7 @@ function openReport(){
   }
   html+='<div class="tot"><span><b>'+t("monthTot")+'</b></span><span class="v">€ '+fmt(grand)+'</span></div>';
   $("#r-body").innerHTML=html;
-  $("#r-zip").disabled=!monthItems(month).some(r=>attsOf(r).length);
+  $("#r-zip").disabled=$("#r-pdf").disabled=!monthItems(month).some(r=>attsOf(r).length);
   $("#r-confirm").hidden=true; setMsg("#r-msg","");
   $("#d-rep").showModal();
 }
@@ -837,6 +838,61 @@ $("#r-zip").onclick=async()=>{
         if(!got)missing.push(k.key+" #"+r.n);
       }
       if(n)out.push({blob:await zip.generateAsync({type:"blob"}),name:fileName(k.key).replace(/\.xlsx$/,".zip"),type:"application/zip"});
+    }
+    if(!out.length){setMsg("#r-msg",t("noPhotos"),"warn");return}
+    const r=await deliverMany(out);
+    const miss=missing.length?t("missPhotos",{l:missing.join(", ")}):"";
+    setMsg("#r-msg",(r==="cancel"?"":t("photosReady",{f:out.map(o=>o.name).join(t("and"))}))+miss,missing.length?"warn":"");
+  }catch(e){setMsg("#r-msg",t("errPhotos"),"err")}
+};
+/* PDF dei documenti: una pagina per foto o pagina PDF; numero e dati in una fascia bianca sopra, il documento sotto (mai sovrapposti) */
+let pdfLibP=null;
+const loadPdfLib=()=>pdfLibP||(pdfLibP=new Promise((res,rej)=>{const s=document.createElement("script");s.src="pdf-lib.min.js";s.onload=()=>res(window.PDFLib);s.onerror=()=>{pdfLibP=null;s.remove();rej(new Error("pdf-lib"))};document.head.append(s)}));
+const ansi=s=>String(s).replace(/[^\x20-\x7e\xa0-\xff€‘’“”–—…•]/g,"?");
+async function buildPdf(kind,rows,missing){
+  const {PDFDocument,StandardFonts,rgb}=await loadPdfLib();
+  const doc=await PDFDocument.create(),bold=await doc.embedFont(StandardFonts.HelveticaBold),reg=await doc.embedFont(StandardFonts.Helvetica);
+  doc.setTitle(fileName(kind.key).replace(/\.xlsx$/,""));
+  const RED=rgb(.8,0,0),INK=rgb(.2,.2,.2),GREY=rgb(.45,.45,.45),M=28,BAND=62,A4=[595.28,841.89];
+  const fit=(s,f,z,w)=>{s=ansi(s);if(f.widthOfTextAtSize(s,z)<=w)return s;while(s&&f.widthOfTextAtSize(s+"…",z)>w)s=s.slice(0,-1);return s+"…"};
+  const head=(land,r,i,nP)=>{
+    const [pw,ph]=land?[A4[1],A4[0]]:A4,p=doc.addPage([pw,ph]),num="#"+r.n,top=ph-M;
+    p.drawText(num,{x:M,y:top-22,size:24,font:bold,color:RED});
+    p.drawText(ansi(t(kind.lk)),{x:M+bold.widthOfTextAtSize(num,24)+10,y:top-20,size:11,font:bold,color:RED});
+    if(nP>1){const s=ansi(t("page",{n:i+1})+"/"+nP);p.drawText(s,{x:pw-M-reg.widthOfTextAtSize(s,11),y:top-20,size:11,font:reg,color:INK})}
+    const info=[dayLabel(r.date),colName(r.col),r.dest,(r.currency!=="EUR"?r.currency:"€")+" "+fmt(r.amount)].filter(Boolean).join("  ·  ");
+    p.drawText(fit(info,reg,10,pw-2*M),{x:M,y:top-40,size:10,font:reg,color:INK});
+    p.drawLine({start:{x:M,y:top-BAND+8},end:{x:pw-M,y:top-BAND+8},thickness:1.2,color:RED});
+    return {p,w:pw-2*M,h:ph-2*M-BAND};
+  };
+  for(const r of rows){
+    const parts=[];let bad=false;
+    for(const a of attsOf(r)){
+      const b=await getFoto(a.k);if(!b)continue;const bytes=await b.arrayBuffer();
+      try{
+        if(a.type==="application/pdf"){const src=await PDFDocument.load(bytes,{ignoreEncryption:true});for(const e of await doc.embedPdf(src,src.getPageIndices()))parts.push({e,pdf:true})}
+        else parts.push({e:await doc.embedJpg(bytes).catch(()=>doc.embedPng(bytes))});
+      }catch(_){bad=true}
+    }
+    if(!parts.length){
+      const {p,h}=head(false,r,0,1);p.drawText(ansi(t(bad?"pdfBad":"noAtt")),{x:M,y:M+h-30,size:14,font:reg,color:GREY});
+      missing.push(kind.key+" #"+r.n);continue;
+    }
+    parts.forEach((x,i)=>{
+      const ew=x.e.width,eh=x.e.height,{p,w,h}=head(ew>eh*1.05,r,i,parts.length),k=Math.min(w/ew,h/eh),dw=ew*k,dh=eh*k,pos={x:M+(w-dw)/2,y:M+h-dh,width:dw,height:dh};
+      if(x.pdf)p.drawPage(x.e,pos);else p.drawImage(x.e,pos);
+    });
+    if(bad)missing.push(kind.key+" #"+r.n);
+  }
+  return new Blob([await doc.save()],{type:"application/pdf"});
+}
+$("#r-pdf").onclick=async()=>{
+  try{
+    setMsg("#r-msg",t("prepPhotos"));
+    const out=[],missing=[];
+    for(const k of KINDS){
+      const rows=numbered(month,k); if(!rows.some(r=>attsOf(r).length))continue;
+      out.push({blob:await buildPdf(k,rows,missing),name:fileName(k.key).replace(/\.xlsx$/,".pdf"),type:"application/pdf"});
     }
     if(!out.length){setMsg("#r-msg",t("noPhotos"),"warn");return}
     const r=await deliverMany(out);
