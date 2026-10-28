@@ -271,7 +271,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="24";
+const APP_VERSION="25";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -756,7 +756,8 @@ function fillSheetXml(xml,rows,opt){
 
 /* ---------- report: due file, Invoice (fatture) e Receipt (scontrini) ---------- */
 const KINDS=[{key:"Invoice",lk:"kindInvoice",test:s=>docOf(s)==="fattura"},{key:"Receipt",lk:"kindReceipt",test:s=>docOf(s)==="scontrino"}];
-function numbered(m,kind){return monthItems(m).filter(kind.test).map((s,i)=>({...s,doc:docOf(s),n:i+1}))}
+/* numerazione: per giorno e, nello stesso giorno, nell'ordine delle colonne del modello (G..U, da sinistra a destra) */
+function numbered(m,kind){return monthItems(m).filter(kind.test).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.col<b.col?-1:a.col>b.col?1:(a.created||0)-(b.created||0)).map((s,i)=>({...s,doc:docOf(s),n:i+1}))}
 function summary(rows){
   const eur=rows.filter(r=>r.currency==="EUR");const by={};eur.forEach(r=>{by[r.col]=by[r.col]||{n:0,t:0};by[r.col].n++;by[r.col].t+=r.amount});
   return {by,tot:eur.reduce((t,r)=>t+r.amount,0),fx:rows.length-eur.length};
