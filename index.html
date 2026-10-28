@@ -271,7 +271,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="23";
+const APP_VERSION="24";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -858,7 +858,10 @@ async function buildPdf(kind,rows,missing){
   const head=(land,r,i,nP)=>{
     const [pw,ph]=land?[A4[1],A4[0]]:A4,p=doc.addPage([pw,ph]),num="#"+r.n,top=ph-M;
     p.drawText(num,{x:M,y:top-22,size:24,font:bold,color:RED});
-    p.drawText(ansi(t(kind.lk)),{x:M+bold.widthOfTextAtSize(num,24)+10,y:top-20,size:11,font:bold,color:RED});
+    let nx=M+bold.widthOfTextAtSize(num,24);
+    /* più pagine per la stessa spesa: #5.1, #5.2 con il numero di pagina più piccolo */
+    if(nP>1){const sub="."+(i+1);p.drawText(sub,{x:nx,y:top-22,size:15,font:bold,color:RED});nx+=bold.widthOfTextAtSize(sub,15)}
+    p.drawText(ansi(t(kind.lk)),{x:nx+10,y:top-20,size:11,font:bold,color:RED});
     if(nP>1){const s=ansi(t("page",{n:i+1})+"/"+nP);p.drawText(s,{x:pw-M-reg.widthOfTextAtSize(s,11),y:top-20,size:11,font:reg,color:INK})}
     const info=[dayLabel(r.date),colName(r.col),r.dest,(r.currency!=="EUR"?r.currency:"€")+" "+fmt(r.amount)].filter(Boolean).join("  ·  ");
     p.drawText(fit(info,reg,10,pw-2*M),{x:M,y:top-40,size:10,font:reg,color:INK});
