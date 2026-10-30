@@ -105,6 +105,9 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .check{display:flex;align-items:center;gap:10px;font-weight:600}
 .check input{width:22px;height:22px;accent-color:var(--accent)}
 .photo{display:flex;flex-direction:column;gap:10px}
+/* campi compilati dalla lettura automatica: da controllare */
+#f .ocr:is(input){border-color:var(--accent);background:var(--accent-soft)}
+#f .ocr:is(.seg,.chips){outline:2px dashed var(--accent);outline-offset:3px;border-radius:12px}
 .atts{display:flex;flex-direction:column;gap:10px}
 .att{position:relative}
 .att img{display:block;width:100%;max-height:340px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:var(--sunk);cursor:zoom-in}
@@ -259,6 +262,12 @@ td.r,th.r{text-align:right}
       <label class="btn filebtn"><span data-i18n="loadTpl">Carica modello (.xlsx)</span><input type="file" id="s-tpl-in" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
     </div>
     <div>
+      <span class="lbl" data-i18n="ocrTitle">Lettura automatica (OCR)</span>
+      <label class="check"><input type="checkbox" id="s-ocr"><span data-i18n="ocrOn">Compila i campi leggendo la foto</span></label>
+      <p class="small muted" style="margin:6px 0 0" data-i18n="ocrInfo"></p>
+      <p class="small" id="s-ocr-st" style="margin:4px 0 0"></p>
+    </div>
+    <div>
       <span class="lbl" data-i18n="backup">Backup</span>
       <p class="small muted" style="margin:0 0 8px" data-i18n="backupInfo">Spese e foto sono salvate solo su questo telefono. Il backup è un file .zip con spese e foto: salvalo su iCloud Drive con «Salva su File».</p>
       <div class="actions"><button class="btn" id="s-exp" data-i18n="exportBk">Esporta backup</button><label class="btn filebtn"><span data-i18n="importBk">Importa backup</span><input type="file" id="s-imp" accept=".zip,.json,application/zip,application/json"></label></div>
@@ -271,7 +280,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="30";
+const APP_VERSION="31";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -305,7 +314,8 @@ errSave:"Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup
 warnFx:"Il giorno {d} ha spese in valute diverse ({c}): il modello ha una sola valuta per giorno, correggi a mano.",
 warnCells:"Alcune celle non sono state trovate: controlla che il modello caricato sia quello giusto.",
 numList:"Elenco numerato (per scrivere i numeri sui documenti)",kindInvoice:"Invoice · fatture",kindReceipt:"Receipt · scontrini",reportTitle:"Nota spese · {m}",totEur:"Totale €",plusFx:"+ {n} in valuta",monthTot:"Totale del mese",
-noTpl:"Prima carica il modello nota spese dalle impostazioni (⚙︎).",noName:"Prima scrivi nome e cognome nelle impostazioni (⚙︎): servono per il nome dei file.",building:"Compilo i modelli…",ready:"Pronti: {f}",and:" e ",
+noTpl:"Prima carica il modello nota spese dalle impostazioni (⚙︎).",noName:"Prima scrivi nome e cognome nelle impostazioni (⚙︎): servono per il nome dei file.",
+ocrTitle:"Lettura automatica (OCR)",ocrOn:"Compila i campi leggendo la foto",ocrInfo:"Dopo il ritaglio legge importo, data, fattura o scontrino e voce, e riempie solo i campi vuoti. Funziona sul telefono anche offline: la foto non esce mai. Ricorda la voce per ogni negozio (partita IVA). La prima volta scarica circa 6 MB.",ocrLoading:"Scarico i file per la lettura (circa 6 MB)…",ocrReady:"Pronta: funziona anche offline.",ocrDlErr:"Download non riuscito: riprova quando sei connesso.",ocrReading:"Leggo il documento…",ocrFilled:"Letti dalla foto: {f}. Controlla prima di salvare.",ocrNone:"Non sono riuscito a leggere i dati dalla foto.",ocrErr:"Lettura automatica non disponibile: riattivala dalle impostazioni quando sei connesso.",building:"Compilo i modelli…",ready:"Pronti: {f}",and:" e ",
 errBuild:"Non riesco a compilare il modello: {e}.",badFile:"file non valido",noData:"manca il foglio DATA",
 prepPhotos:"Preparo i documenti…",noPhotos:"Nessun allegato per questo mese.",photosReady:"Documenti pronti: {f}.",missPhotos:" Senza allegato: {l}.",errPhotos:"Non riesco a preparare i documenti.",
 tplLoaded:"Caricato: {n}. Ricaricalo solo se l'amministrazione cambia il modello.",tplNone:"Nessun modello caricato. Usa il file di un mese qualsiasi: le righe dei giorni vengono svuotate ogni volta.",
@@ -331,7 +341,8 @@ errSave:"Saving failed. Try again; if it keeps failing, export a backup from set
 warnFx:"Day {d} has expenses in different currencies ({c}): the template has one currency per day, fix it by hand.",
 warnCells:"Some cells were not found: check that the loaded template is the right one.",
 numList:"Numbered list (to write the numbers on the documents)",kindInvoice:"Invoice",kindReceipt:"Receipt",reportTitle:"Expense report · {m}",totEur:"Total €",plusFx:"+ {n} in foreign currency",monthTot:"Month total",
-noTpl:"Load the expense template in settings (⚙︎) first.",noName:"First enter your first and last name in settings (⚙︎): they are needed for the file names.",building:"Filling in the templates…",ready:"Ready: {f}",and:" and ",
+noTpl:"Load the expense template in settings (⚙︎) first.",noName:"First enter your first and last name in settings (⚙︎): they are needed for the file names.",
+ocrTitle:"Automatic reading (OCR)",ocrOn:"Fill in the fields by reading the photo",ocrInfo:"After cropping it reads amount, date, invoice or receipt and category, and fills only empty fields. It runs on the phone, offline too: the photo never leaves it. It remembers the category for each shop (VAT number). The first time it downloads about 6 MB.",ocrLoading:"Downloading the reading files (about 6 MB)…",ocrReady:"Ready: works offline too.",ocrDlErr:"Download failed: try again when online.",ocrReading:"Reading the document…",ocrFilled:"Read from the photo: {f}. Check before saving.",ocrNone:"Could not read the data from the photo.",ocrErr:"Automatic reading not available: turn it on again in settings when online.",building:"Filling in the templates…",ready:"Ready: {f}",and:" and ",
 errBuild:"Could not fill in the template: {e}.",badFile:"invalid file",noData:"the DATA sheet is missing",
 prepPhotos:"Preparing documents…",noPhotos:"No attachments for this month.",photosReady:"Documents ready: {f}.",missPhotos:" No attachment: {l}.",errPhotos:"Could not prepare the documents.",
 tplLoaded:"Loaded: {n}. Reload it only if the template changes.",tplNone:"No template loaded. Use the file of any month: the day rows are cleared every time.",
@@ -395,7 +406,7 @@ async function boot(){
   applyStatic();$("#s-ver").textContent=APP_VERSION;
   try{
     spese=await getAll();
-    for(const k of ["name","lastDest","lastCur","lastCurDate","catUse","docByCol","lastBackupAt"]){const v=await getCfg(k);if(v!==undefined)cfg[k]=v}
+    for(const k of ["name","lastDest","lastCur","lastCurDate","catUse","docByCol","lastBackupAt","ocr","vendors"]){const v=await getCfg(k);if(v!==undefined)cfg[k]=v}
   }catch(e){ $("#list").innerHTML='<div class="empty">'+esc(t("storageErr"))+'</div>';return }
   render();
   if("serviceWorker" in navigator){
@@ -471,6 +482,7 @@ let docTouched=false;
 function selectedCol(){const c=$("#f-cats").querySelector('[aria-pressed="true"]');return c?c.dataset.col:null}
 async function openForm(s){
   editing=s||null; docTouched=false; dupSig=""; formAtt=(s?attsOf(s):[]).map(a=>({...a})); removedKeys=[];
+  formSeq++; fTouched={}; formPiva=s&&s.piva||null; document.querySelectorAll("#f .ocr").forEach(x=>x.classList.remove("ocr"));
   $("#f-title").textContent=t(s?"editExp":"newExp");
   $("#f-amt").value=s?fmt(s.amount):"";
   $("#f-cur").value=s?s.currency:((cfg.lastCurDate&&Math.abs(Date.parse(todayISO())-Date.parse(cfg.lastCurDate))<=2*864e5)?(cfg.lastCur||"EUR"):"EUR");
@@ -503,6 +515,8 @@ $("#f").addEventListener("submit",async e=>{
   try{
     for(const a of formAtt){if(!a.k&&a.blob){a.k=o.id+"_"+uid();await putFoto(a.k,a.blob)}}
     o.att=formAtt.filter(a=>a.k).map(a=>({k:a.k,type:a.type,name:a.name||""}));o.photo=o.att.length>0;
+    /* memoria per partita IVA del negozio: la prossima volta propone la stessa voce, documento e destinazione */
+    if(formPiva){o.piva=formPiva;cfg.vendors=cfg.vendors||{};cfg.vendors[formPiva]={col:o.col,doc:o.doc,dest:o.dest};setCfg("vendors",cfg.vendors).catch(()=>{})}
     await putSpesa(o);
     for(const k of removedKeys)await delFoto(k).catch(()=>{});
     if(!editing){cfg.catUse[col]=(cfg.catUse[col]||0)+1;await setCfg("catUse",cfg.catUse)}
@@ -539,6 +553,7 @@ $("#f-photo").addEventListener("change",async e=>{
         const r=await cropPhoto(f);if(!r)continue;
         const blob=r.blob||await shrink(f);
         formAtt.push({blob,type:"image/jpeg",name:"",url:URL.createObjectURL(blob)});
+        ocrFill(blob);
       }
     }catch(_){setMsg("#f-msg",t("errPhoto"),"err")}
   }
@@ -713,6 +728,79 @@ window.addEventListener("resize",layoutCrop);
 $("#c-ok").onclick=()=>{crop.result="crop";$("#d-crop").close()};
 $("#c-full").onclick=()=>{crop.result="full";$("#d-crop").close()};
 $("#d-crop").addEventListener("close",()=>{if(crop&&crop.done)crop.done(crop.result)});
+
+/* ---------- lettura automatica (OCR sul telefono con Tesseract.js, file in ocr/): propone i campi vuoti ---------- */
+const OWN_PIVA="13825130969";
+let ocrWorkerP=null,formSeq=0,fTouched={},formPiva=null;
+const loadScript=src=>new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>{s.remove();rej(new Error(src))};document.head.append(s)});
+function ocrWorker(){
+  const base=new URL("ocr/",location.href).href;
+  if(!ocrWorkerP)ocrWorkerP=(window.Tesseract?Promise.resolve():loadScript("ocr/tesseract.min.js"))
+    .then(()=>Tesseract.createWorker("ita",1,{workerPath:base+"worker.min.js",corePath:base,langPath:base,gzip:true,workerBlobURL:false,cacheMethod:"none"}))
+    .catch(e=>{ocrWorkerP=null;throw e});
+  return ocrWorkerP;
+}
+function pivaOk(p){if(!/^\d{11}$/.test(p)||/^0+$/.test(p))return false;let s=0;for(let i=0;i<10;i++){let d=+p[i];if(i%2){d*=2;if(d>9)d-=9}s+=d}return (10-s%10)%10===+p[10]}
+/* dal testo letto: importo (voti delle righe totale/pagato/carta), data più frequente, ora, P.IVA del negozio, fattura o scontrino, voce */
+function parseReceipt(text){
+  const lines=text.split(/\n/).map(l=>l.trim()).filter(Boolean),U=text.toUpperCase();
+  const AMT=/(\d{1,4}(?:[.,]\d{3})*[.,]\d{2})(?!\d)/g,num=s=>Math.round(parseFloat(s.replace(/[.,](?=\d{3}[.,])/g,"").replace(",","."))*100)/100;
+  const KEY=/TOTAL|\bTOT\b|TOT\.|PAGAT|COMPLESSIV|IMPORTO|CARTA|CARTE|BANCOMAT|\bPOS\b|AMEX|AMERICAN EXPRESS|VISA|MASTERCARD|CONTANT|PAGAMENTO/i;
+  const BAD=/IVA\b|IMPONIBIL|IMPOSTA|NETTO|RESTO|SCONTO|ALIQ|PUNTI|SALDO/i;
+  const votes={};
+  lines.forEach((l,i)=>{if(!KEY.test(l)||BAD.test(l))return;let a=[...l.matchAll(AMT)].map(m=>num(m[1]));
+    if(!a.length&&lines[i+1]&&!BAD.test(lines[i+1]))a=[...lines[i+1].matchAll(AMT)].map(m=>num(m[1]));
+    if(a.length){const v=a[a.length-1];if(v>0&&v<10000)votes[v]=(votes[v]||0)+1}});
+  const vs=Object.entries(votes).sort((a,b)=>b[1]-a[1]||b[0]-a[0]),amount=vs.length?+vs[0][0]:null;
+  const dates={};for(const m of text.matchAll(/(?<!\d)(\d{1,2})\s?[\/.\-]\s?(\d{1,2})\s?[\/.\-]\s?(20\d{2}|\d{2})(?!\d)/g)){
+    const d=+m[1],mo=+m[2];let y=+m[3];if(y<100)y+=2000;if(d<1||d>31||mo<1||mo>12||y<2020||y>2040)continue;
+    const iso=isoOf(y,mo,d);dates[iso]=(dates[iso]||0)+1}
+  const ds=Object.entries(dates).sort((a,b)=>b[1]-a[1]),date=ds.length?ds[0][0]:null;
+  const tm=text.match(/(?<![\d.,])([01]?\d|2[0-3]):([0-5]\d)(?!\d)/),hour=tm?+tm[1]:null;
+  const pivas=[...new Set([...U.replace(/ /g,"").matchAll(/(?<!\d)(\d{11})(?!\d)/g)].map(m=>m[1]).filter(pivaOk))];
+  const vendorPiva=pivas.find(p=>p!==OWN_PIVA)||null;
+  const doc=(pivas.includes(OWN_PIVA)||/ESTUN|CESSIONARIO|COMMITTENTE|CODICE DESTINATARIO|FATTURA\s*N|FATT\.?\s*(N|EL)|DOCUMENTO GESTIONALE/.test(U))?"fattura":"scontrino";
+  const K={H:/HOTEL|CAMERA|PERNOTT|CHECK.?IN|CHECK.?OUT|SOGGIORNO|B&B|\bALBERGO/g,L:/BENZIN|GASOLIO|DIESEL|CARBURANT|SELF SERVICE|\bLITRI|\bLT\b|SENZA PIOMBO|\bGPL\b|\bQ8\b|TAMOIL|\bESSO\b/g,
+    M:/AUTOSTRAD|PEDAGGI|TELEPASS|CASELLO|VIACARD/g,N:/PARCHEGG|PARKING|\bSOSTA|TARGA|DURATA/g,G:/TRENITALIA|\bITALO\b|BIGLIETT|BOARDING|\bVOLO\b|RYANAIR|EASYJET|ITA AIRWAYS|LUFTHANSA/g,
+    S:/\bTAXI|RADIOTAXI/g,K:/NOLEGGI|HERTZ|\bAVIS\b|EUROPCAR|\bSIXT\b/g,J:/LAVAGGIO|AUTOLAVAGG/g,
+    U:/CANCELLERIA|FERRAMENTA|BRICO|ADATTATOR|CONNETTOR|MORSETT|\bSPINA|\bPRESA|\bCAVO/g,
+    meal:/RIST|OSTERIA|TRATTORIA|PIZZERIA|LOCANDA|MENU|COPERT|ACQUA|BIBITA|INSALAT|CHEF|\bBAR\b|CAFF|PRANZO|CENA|PASTO|BISTECC|PESCE|DOLCE|PIATTO|BOTTEGA/g};
+  const sc={};for(const [k,re] of Object.entries(K))sc[k]=(U.match(re)||[]).length;
+  if(sc.H&&/CAMERA|CHECK|PERNOTT|SOGGIORNO|HOTEL/.test(U))sc.H+=3;
+  let col=null,best=0;for(const [k,v] of Object.entries(sc))if(v>best){best=v;col=k}
+  if(col==="meal")col=hour!=null&&hour>=16?"I":"O";
+  return {amount,date,hour,vendorPiva,doc,col};
+}
+/* dopo una foto: legge in background e riempie solo i campi ancora vuoti o non toccati */
+async function ocrFill(blob){
+  if(!cfg.ocr||editing)return;
+  const seq=formSeq;setMsg("#f-msg",t("ocrReading"));
+  try{
+    const w=await ocrWorker(),{data}=await w.recognize(blob);
+    if(seq!==formSeq||!$("#d-form").open)return;
+    const r=parseReceipt(data.text),mem=r.vendorPiva&&cfg.vendors&&cfg.vendors[r.vendorPiva],got=[];
+    const mark=(sel,lk)=>{$(sel).classList.add("ocr");got.push(t(lk))};
+    if(r.amount!=null&&!$("#f-amt").value.trim()){$("#f-amt").value=fmt(r.amount);mark("#f-amt","amount")}
+    if(r.date&&!fTouched.date&&r.date<=todayISO()&&r.date!==$("#f-date").value){$("#f-date").value=r.date;mark("#f-date","date")}
+    const doc=mem?mem.doc:r.doc;if(doc&&!docTouched&&doc!==currentDoc()){setDoc(doc);mark("#f-doc","doc")}
+    const col=mem?mem.col:r.col;if(col&&!selectedCol()&&!HIDDEN_COLS.includes(col)){renderCats(col);mark("#f-cats","category")}
+    if(mem&&mem.dest&&!fTouched.dest&&mem.dest!==$("#f-dest").value){$("#f-dest").value=mem.dest;mark("#f-dest","dest")}
+    if(r.vendorPiva&&!formPiva)formPiva=r.vendorPiva;
+    setMsg("#f-msg",got.length?t("ocrFilled",{f:got.join(", ")}):t("ocrNone"),got.length?"":"warn");
+  }catch(_){if(seq===formSeq)setMsg("#f-msg",t("ocrErr"),"warn")}
+}
+$("#f-amt").addEventListener("input",e=>e.target.classList.remove("ocr"));
+$("#f-date").addEventListener("input",e=>{fTouched.date=true;e.target.classList.remove("ocr")});
+$("#f-dest").addEventListener("input",e=>{fTouched.dest=true;e.target.classList.remove("ocr")});
+$("#f-doc").addEventListener("click",()=>$("#f-doc").classList.remove("ocr"));
+$("#f-cats").addEventListener("click",()=>$("#f-cats").classList.remove("ocr"));
+/* impostazione: accesa scarica subito i file (circa 6 MB) così poi funziona offline */
+$("#s-ocr").addEventListener("change",async e=>{
+  cfg.ocr=e.target.checked;await setCfg("ocr",cfg.ocr);const st=$("#s-ocr-st");
+  if(!cfg.ocr){st.textContent="";return}
+  st.className="small muted";st.textContent=t("ocrLoading");
+  try{await ocrWorker();st.className="small";st.textContent=t("ocrReady")}catch(_){st.className="small msg err";st.textContent=t("ocrDlErr")}
+});
 
 /* ---------- dialog ---------- */
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
@@ -930,7 +1018,7 @@ async function refreshTplText(){
   $("#s-tpl").textContent=tpl?t("tplLoaded",{n:tn||"modello.xlsx"}):t("tplNone");
 }
 async function openSettings(){
-  $("#s-name").value=cfg.name||"";await refreshTplText();
+  $("#s-name").value=cfg.name||"";$("#s-ocr").checked=!!cfg.ocr;if(!cfg.ocr)$("#s-ocr-st").textContent="";await refreshTplText();
   setMsg("#s-msg","");if(!$("#d-set").open)$("#d-set").showModal();
 }
 $("#b-set").onclick=openSettings;
