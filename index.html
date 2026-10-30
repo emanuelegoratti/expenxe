@@ -271,7 +271,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="28";
+const APP_VERSION="29";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -736,7 +736,9 @@ function fillSheetXml(xml,rows,opt){
   const warn=[];let miss=0;
   const put=(ref,v)=>{const r=setCell(xml,ref,v);xml=r.xml;if(!r.hit)miss++};
   for(let r=7;r<=37;r++){for(const c of DAY_COLS)put(c+r,null);put("D"+r,"EUR")}
-  if(opt.employee)put("B2",opt.employee);
+  /* B2: il nome si scrive solo se nel modello c'è già scritto qualcosa; se è vuota resta vuota */
+  const b2=xml.match(/<c r="B2"[^>]*?(?:\/>|>([\s\S]*?)<\/c>)/);
+  if(opt.employee&&b2&&/<v>[^<]+<\/v>|<t[^>]*>[^<]+<\/t>/.test(b2[1]||""))put("B2",opt.employee);
   /* tipo di file: B3 "FATTURE" o "RICEVUTE", intestazione dei numeri F5 "Invoice #" o "Receipt #" */
   if(opt.kind){put("B3",opt.kind==="Invoice"?"FATTURE":"RICEVUTE");put("F5",opt.kind+" #")}
   const first=excelSerial(opt.month+"-01");put("H2",first);put("I2",excelSerial(opt.today));
