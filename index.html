@@ -271,7 +271,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="27";
+const APP_VERSION="28";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -748,8 +748,9 @@ function fillSheetXml(xml,rows,opt){
     const curs=[...new Set(list.map(x=>x.currency||"EUR"))];
     if(curs.length>1)warn.push(t("warnFx",{d,c:curs.join(", ")}));
     put("D"+rr,curs[0]);
-    const dests=[...new Set(list.map(x=>[(x.dest||"").trim(),(x.note||"").trim()].filter(Boolean).join(" ")).filter(Boolean))];
-    put("B"+rr,dests.join(", "));
+    /* colonna B: ogni destinazione una volta sola, poi le note (es. "Brescia, Antares, cena cliente") */
+    const uniq=k=>[...new Set(list.map(x=>(x[k]||"").trim()).filter(Boolean))];
+    put("B"+rr,[...uniq("dest"),...uniq("note")].join(", "));
     put("F"+rr,list.map(x=>"#"+x.n).join(", "));
     const sums={};list.forEach(x=>{sums[x.col]=(sums[x.col]||0)+x.amount});
     for(const c of Object.keys(sums))put(c+rr,Math.round(sums[c]*100)/100);
