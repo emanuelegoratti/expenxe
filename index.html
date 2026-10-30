@@ -252,7 +252,7 @@ td.r,th.r{text-align:right}
     <div class="grab"></div>
     <div class="sheeth"><h2 id="s-title" data-i18n="settings">Impostazioni</h2><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
     <div><span class="lbl" id="s-lang-l" data-i18n="language">Lingua</span><div class="seg" id="s-lang" role="group" aria-labelledby="s-lang-l"><button type="button" data-lang="it">Italiano</button><button type="button" data-lang="en">English</button></div></div>
-    <div class="field"><label class="lbl" for="s-name" data-i18n="name">Nome e cognome</label><input id="s-name" autocomplete="name" data-i18n-ph="namePh" placeholder="Come nel modello"></div>
+    <div class="field"><label class="lbl" for="s-name" data-i18n="name">Nome e cognome</label><input id="s-name" autocomplete="name"></div>
     <div>
       <span class="lbl" data-i18n="tplTitle">Modello nota spese</span>
       <p class="small muted" id="s-tpl" style="margin:0 0 8px"></p>
@@ -271,13 +271,15 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="25";
+const APP_VERSION="28";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
   ["R","Regali a clienti","Gifts to customers"],["J","Auto: lavaggio, ricambi","Car wash, small parts"],["I","Cena (se non compresa in hotel)","Food (evening)"]];
 const colName=k=>{const c=COLS3.find(x=>x[0]===k);return c?(lang==="it"?c[1]:c[2]):k};
-const COLS_KEYS=COLS3.map(c=>c[0]);
+/* voci nascoste: non si possono scegliere per le spese nuove, ma quelle già salvate restano valide */
+const HIDDEN_COLS=["T"];
+const COLS_KEYS=COLS3.map(c=>c[0]).filter(k=>!HIDDEN_COLS.includes(k));
 const CURRENCIES=["EUR","CHF","USD","GBP","PLN","CZK","HUF","RON","SEK","DKK","NOK","BGN","RSD","JPY","UAH"];
 
 /* ---------- utilità ---------- */
@@ -290,7 +292,7 @@ doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Aggiungi foto o PDF
 cropTitle:"Ritaglia sul foglio",cropHint:"Trascina gli angoli sui bordi del foglio.",cropDo:"Ritaglia",cropFull:"Foto intera",crop:"✂︎ Ritaglia",delete:"Elimina",save:"Salva",
 genFiles:"Genera Invoice e Receipt",zipPhotos:"Documenti (.zip)",pdfDocs:"Documenti (.pdf)",noAtt:"Nessun allegato",pdfBad:"PDF non leggibile: invialo a parte",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
 clearWarn:"Cancella dal telefono tutte le spese e gli allegati di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.",
-language:"Lingua",name:"Nome e cognome",namePh:"Come nel modello",tplTitle:"Modello nota spese",loadTpl:"Carica modello (.xlsx)",backup:"Backup",
+language:"Lingua",name:"Nome e cognome",tplTitle:"Modello nota spese",loadTpl:"Carica modello (.xlsx)",backup:"Backup",
 backupInfo:"Spese e allegati sono salvati solo su questo telefono. Il backup è un file .zip con spese e allegati: salvalo su iCloud Drive con «Salva su File».",
 exportBk:"Esporta backup",importBk:"Importa backup",footer:"Expenxe · funziona offline · nessun dato lascia il telefono",
 storageErr:"Il browser non permette di salvare dati. Apri l'app da Safari, non in navigazione privata.",
@@ -303,7 +305,7 @@ errSave:"Salvataggio non riuscito. Riprova; se succede ancora, esporta un backup
 warnFx:"Il giorno {d} ha spese in valute diverse ({c}): il modello ha una sola valuta per giorno, correggi a mano.",
 warnCells:"Alcune celle non sono state trovate: controlla che il modello caricato sia quello giusto.",
 numList:"Elenco numerato (per scrivere i numeri sui documenti)",kindInvoice:"Invoice · fatture",kindReceipt:"Receipt · scontrini",reportTitle:"Nota spese · {m}",totEur:"Totale €",plusFx:"+ {n} in valuta",monthTot:"Totale del mese",
-noTpl:"Prima carica il modello nota spese dalle impostazioni (⚙︎).",building:"Compilo i modelli…",ready:"Pronti: {f}",and:" e ",
+noTpl:"Prima carica il modello nota spese dalle impostazioni (⚙︎).",noName:"Prima scrivi nome e cognome nelle impostazioni (⚙︎): servono per il nome dei file.",building:"Compilo i modelli…",ready:"Pronti: {f}",and:" e ",
 errBuild:"Non riesco a compilare il modello: {e}.",badFile:"file non valido",noData:"manca il foglio DATA",
 prepPhotos:"Preparo i documenti…",noPhotos:"Nessun allegato per questo mese.",photosReady:"Documenti pronti: {f}.",missPhotos:" Senza allegato: {l}.",errPhotos:"Non riesco a preparare i documenti.",
 tplLoaded:"Caricato: {n}. Ricaricalo solo se l'amministrazione cambia il modello.",tplNone:"Nessun modello caricato. Usa il file di un mese qualsiasi: le righe dei giorni vengono svuotate ogni volta.",
@@ -316,7 +318,7 @@ doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Add photo or PDF",addP
 cropTitle:"Crop to the paper",cropHint:"Drag the corners onto the edges of the paper.",cropDo:"Crop",cropFull:"Whole photo",crop:"✂︎ Crop",delete:"Delete",save:"Save",
 genFiles:"Create Invoice and Receipt",zipPhotos:"Documents (.zip)",pdfDocs:"Documents (.pdf)",noAtt:"No attachment",pdfBad:"PDF cannot be read: send it separately",clearMonth:"Delete month…",clearYes:"Delete the month",
 clearWarn:"Deletes all expenses and attachments of this month from the phone, with no way to recover them. Not needed to free up space: do it only if you really want them gone.",
-language:"Language",name:"Full name",namePh:"As in the template",tplTitle:"Expense template",loadTpl:"Load template (.xlsx)",backup:"Backup",
+language:"Language",name:"Full name",tplTitle:"Expense template",loadTpl:"Load template (.xlsx)",backup:"Backup",
 backupInfo:"Expenses and attachments are stored only on this phone. The backup is a .zip file with expenses and attachments: save it to iCloud Drive with “Save to Files”.",
 exportBk:"Export backup",importBk:"Import backup",footer:"Expenxe · works offline · no data leaves the phone",
 storageErr:"This browser does not allow saving data. Open the app from Safari, not in private browsing.",
@@ -329,7 +331,7 @@ errSave:"Saving failed. Try again; if it keeps failing, export a backup from set
 warnFx:"Day {d} has expenses in different currencies ({c}): the template has one currency per day, fix it by hand.",
 warnCells:"Some cells were not found: check that the loaded template is the right one.",
 numList:"Numbered list (to write the numbers on the documents)",kindInvoice:"Invoice",kindReceipt:"Receipt",reportTitle:"Expense report · {m}",totEur:"Total €",plusFx:"+ {n} in foreign currency",monthTot:"Month total",
-noTpl:"Load the expense template in settings (⚙︎) first.",building:"Filling in the templates…",ready:"Ready: {f}",and:" and ",
+noTpl:"Load the expense template in settings (⚙︎) first.",noName:"First enter your first and last name in settings (⚙︎): they are needed for the file names.",building:"Filling in the templates…",ready:"Ready: {f}",and:" and ",
 errBuild:"Could not fill in the template: {e}.",badFile:"invalid file",noData:"the DATA sheet is missing",
 prepPhotos:"Preparing documents…",noPhotos:"No attachments for this month.",photosReady:"Documents ready: {f}.",missPhotos:" No attachment: {l}.",errPhotos:"Could not prepare the documents.",
 tplLoaded:"Loaded: {n}. Reload it only if the template changes.",tplNone:"No template loaded. Use the file of any month: the day rows are cleared every time.",
@@ -448,9 +450,10 @@ $("#f-cur").innerHTML=CURRENCIES.map(c=>'<option>'+c+'</option>').join("");
 function catOrder(){return COLS_KEYS.map(k=>[k,colName(k)]).sort((a,b)=>(cfg.catUse[b[0]]||0)-(cfg.catUse[a[0]]||0))}
 function renderCats(sel,all){
   const ord=catOrder(); const showN=all?ord.length:8;
-  let list=ord.slice(0,showN); if(sel&&!list.some(c=>c[0]===sel))list.push(ord.find(c=>c[0]===sel));
+  let list=ord.slice(0,showN); if(sel&&!list.some(c=>c[0]===sel))list.push(ord.find(c=>c[0]===sel)||[sel,colName(sel)]);
+  const rest=ord.filter(c=>!list.some(x=>x[0]===c[0])).length;
   $("#f-cats").innerHTML=list.map(([k,n])=>'<button type="button" class="chip" data-col="'+k+'" aria-pressed="'+(k===sel)+'"><i>'+k+'</i>'+esc(n)+'</button>').join("")+
-    (list.length<ord.length?'<button type="button" class="more" id="f-more">'+t("moreCats",{n:ord.length-list.length})+'</button>':'');
+    (rest?'<button type="button" class="more" id="f-more">'+t("moreCats",{n:rest})+'</button>':'');
 }
 $("#f-cats").addEventListener("click",e=>{if(e.target.closest("#f-more")){renderCats(selectedCol(),true);return}
   const c=e.target.closest(".chip");if(!c)return;
@@ -734,6 +737,8 @@ function fillSheetXml(xml,rows,opt){
   const put=(ref,v)=>{const r=setCell(xml,ref,v);xml=r.xml;if(!r.hit)miss++};
   for(let r=7;r<=37;r++){for(const c of DAY_COLS)put(c+r,null);put("D"+r,"EUR")}
   if(opt.employee)put("B2",opt.employee);
+  /* tipo di file: B3 "FATTURE" o "RICEVUTE", intestazione dei numeri F5 "Invoice #" o "Receipt #" */
+  if(opt.kind){put("B3",opt.kind==="Invoice"?"FATTURE":"RICEVUTE");put("F5",opt.kind+" #")}
   const first=excelSerial(opt.month+"-01");put("H2",first);put("I2",excelSerial(opt.today));
   const cache=(ref,v)=>{xml=xml.replace(new RegExp('(<c r="'+ref+'"[^>]*>[\\s\\S]*?)<v>[^<]*</v>(</c>)'),(m,a,b)=>/<\/c>/.test(a)?m:a+"<v>"+v+"</v>"+b)};
   cache("A3",first+16);for(let r=7;r<=37;r++)cache("A"+r,first+r-7);
@@ -743,8 +748,9 @@ function fillSheetXml(xml,rows,opt){
     const curs=[...new Set(list.map(x=>x.currency||"EUR"))];
     if(curs.length>1)warn.push(t("warnFx",{d,c:curs.join(", ")}));
     put("D"+rr,curs[0]);
-    const dests=[...new Set(list.map(x=>[(x.dest||"").trim(),(x.note||"").trim()].filter(Boolean).join(" ")).filter(Boolean))];
-    put("B"+rr,dests.join(", "));
+    /* colonna B: ogni destinazione una volta sola, poi le note (es. "Brescia, Antares, cena cliente") */
+    const uniq=k=>[...new Set(list.map(x=>(x[k]||"").trim()).filter(Boolean))];
+    put("B"+rr,[...uniq("dest"),...uniq("note")].join(", "));
     put("F"+rr,list.map(x=>"#"+x.n).join(", "));
     const sums={};list.forEach(x=>{sums[x.col]=(sums[x.col]||0)+x.amount});
     for(const c of Object.keys(sums))put(c+rr,Math.round(sums[c]*100)/100);
@@ -781,12 +787,14 @@ function openReport(){
   $("#d-rep").showModal();
 }
 $("#b-report").onclick=openReport;
+/* nome e cognome servono per il nome dei file: 26.10_COGNOME N._Invoice.xlsx */
+const nameParts=()=>(cfg.name||"").trim().split(/\s+/).filter(Boolean);
+function needName(){if(nameParts().length>=2)return false;setMsg("#r-msg",t("noName"),"err");return true}
 function fileName(kind){
-  const yy=month.slice(2,4),mm=month.slice(5,7);
-  const p=(cfg.name||"").trim().split(/\s+/).filter(Boolean);
+  const yy=month.slice(2,4),mm=month.slice(5,7),p=nameParts();
   const clean=x=>x.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z]/g,"");
   if(p.length<2)return yy+"."+mm+"_"+kind+".xlsx";
-  return yy+"."+mm+"_"+clean(p[p.length-1]).toUpperCase()+"_"+clean(p[0]).charAt(0).toUpperCase()+"._"+kind+".xlsx";
+  return yy+"."+mm+"_"+clean(p[p.length-1]).toUpperCase()+" "+clean(p[0]).charAt(0).toUpperCase()+"._"+kind+".xlsx";
 }
 async function deliverMany(items){
   const files=items.map(i=>new File([i.blob],i.name,{type:i.type}));
@@ -799,14 +807,14 @@ async function deliverMany(items){
 }
 const deliver=(blob,name,type)=>deliverMany([{blob,name,type}]);
 const XLSX_TYPE="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-async function buildFile(tpl,rows){
+async function buildFile(tpl,rows,kind){
   const zip=await JSZip.loadAsync(tpl);
   const wb=await zip.file("xl/workbook.xml").async("string");
   const rels=await zip.file("xl/_rels/workbook.xml.rels").async("string");
   const sm=wb.match(/<sheet [^>]*name="DATA"[^>]*r:id="([^"]+)"/);if(!sm)throw new Error(t("noData"));
   const tm=rels.match(new RegExp('<Relationship [^>]*Id="'+sm[1]+'"[^>]*Target="([^"]+)"'))||rels.match(new RegExp('<Relationship [^>]*Target="([^"]+)"[^>]*Id="'+sm[1]+'"'));
   const path="xl/"+tm[1].replace(/^\/?xl\//,"");
-  const res=fillSheetXml(await zip.file(path).async("string"),rows,{employee:cfg.name,month,today:todayISO()});
+  const res=fillSheetXml(await zip.file(path).async("string"),rows,{employee:cfg.name,month,today:todayISO(),kind});
   zip.file(path,res.xml);
   zip.file("xl/workbook.xml",wb.replace(/<calcPr([^>]*?)\/>/,(m,a)=>/fullCalcOnLoad/.test(a)?m:'<calcPr'+a+' fullCalcOnLoad="1"/>'));
   return {blob:await zip.generateAsync({type:"blob",compression:"DEFLATE",mimeType:XLSX_TYPE}),warn:res.warn};
@@ -814,16 +822,18 @@ async function buildFile(tpl,rows){
 $("#r-xlsx").onclick=async()=>{
   const tpl=await getCfg("template");
   if(!tpl){setMsg("#r-msg",t("noTpl"),"err");return}
+  if(needName())return;
   try{
     setMsg("#r-msg",t("building"));
     const out=[],warn=[];
     for(const k of KINDS){const rows=numbered(month,k);if(!rows.length)continue;
-      const f=await buildFile(tpl,rows);out.push({blob:f.blob,name:fileName(k.key),type:XLSX_TYPE});f.warn.forEach(w=>warn.push(k.key+": "+w))}
+      const f=await buildFile(tpl,rows,k.key);out.push({blob:f.blob,name:fileName(k.key),type:XLSX_TYPE});f.warn.forEach(w=>warn.push(k.key+": "+w))}
     const r=await deliverMany(out);
     setMsg("#r-msg",warn.length?warn.join(" "):(r==="cancel"?"":t("ready",{f:out.map(o=>o.name).join(t("and"))})),warn.length?"warn":"");
   }catch(e){setMsg("#r-msg",t("errBuild",{e:e.message||t("badFile")}),"err")}
 };
 $("#r-zip").onclick=async()=>{
+  if(needName())return;
   try{
     setMsg("#r-msg",t("prepPhotos"));
     const out=[],missing=[];
@@ -891,6 +901,7 @@ async function buildPdf(kind,rows,missing){
   return new Blob([await doc.save()],{type:"application/pdf"});
 }
 $("#r-pdf").onclick=async()=>{
+  if(needName())return;
   try{
     setMsg("#r-msg",t("prepPhotos"));
     const out=[],missing=[];
