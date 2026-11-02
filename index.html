@@ -280,14 +280,14 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="31";
+const APP_VERSION="32";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
   ["R","Regali a clienti","Gifts to customers"],["J","Auto: lavaggio, ricambi","Car wash, small parts"],["I","Cena (se non compresa in hotel)","Food (evening)"]];
 const colName=k=>{const c=COLS3.find(x=>x[0]===k);return c?(lang==="it"?c[1]:c[2]):k};
 /* voci nascoste: non si possono scegliere per le spese nuove, ma quelle già salvate restano valide */
-const HIDDEN_COLS=["T"];
+const HIDDEN_COLS=["P","T"];
 const COLS_KEYS=COLS3.map(c=>c[0]).filter(k=>!HIDDEN_COLS.includes(k));
 const CURRENCIES=["EUR","CHF","USD","GBP","PLN","CZK","HUF","RON","SEK","DKK","NOK","BGN","RSD","JPY","UAH"];
 
