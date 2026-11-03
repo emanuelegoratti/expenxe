@@ -110,7 +110,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 #f .ocr:is(.seg,.chips){outline:2px dashed var(--accent);outline-offset:3px;border-radius:12px}
 .atts{display:flex;flex-direction:column;gap:10px}
 .att{position:relative}
-.att img{display:block;width:100%;max-height:340px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:var(--sunk);cursor:zoom-in}
+.att img{display:block;width:100%;max-height:200px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:var(--sunk);cursor:zoom-in}
 .att .pdf{display:flex;gap:12px;align-items:center;width:100%;padding:14px 56px 14px 14px;border:1px solid var(--line);border-radius:12px;background:var(--sunk);text-align:left;cursor:pointer;min-width:0}
 .att .pdf b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .att .pdf .ico{flex:none;width:40px;height:48px;border-radius:6px;background:var(--bad-soft);color:var(--bad);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem}
@@ -118,7 +118,9 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .att .rm{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.62);color:#fff;font-size:1rem;cursor:pointer}
 .att .pg{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.62);color:#fff;border-radius:8px;padding:2px 8px;font-size:.8rem;font-weight:700}
 .att .pdf~.pg{display:none}
-.photo>.btn{width:100%}
+.photo>.btn{width:100%;justify-content:center}
+#f-pmsg:empty{display:none}
+@media (max-width:359px){#f .row2{grid-template-columns:minmax(0,1fr)}}
 #d-img{max-width:none;max-height:none;width:100%;height:100%;margin:0;border-radius:0;background:#000}
 #d-img img{width:100%;height:100%;object-fit:contain;display:block;touch-action:pinch-zoom}
 #d-img .iconbtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 12px);color:#fff;background:rgba(0,0,0,.55);border-radius:50%;width:44px;height:44px;padding:0}
@@ -182,6 +184,11 @@ td.r,th.r{text-align:right}
   <form class="sheet" id="f" method="dialog" tabindex="-1">
     <div class="grab"></div>
     <div class="sheeth"><h2 id="f-title">Nuova spesa</h2><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div class="photo">
+      <div class="atts" id="f-atts"></div>
+      <label class="btn filebtn" id="f-photo-l"><span id="f-photo-t">Scatta foto o carica PDF</span><input type="file" id="f-photo" accept="image/*,application/pdf,.pdf" multiple></label>
+      <div class="msg" id="f-pmsg" role="status"></div>
+    </div>
     <div>
       <label class="lbl" for="f-amt" data-i18n="amount">Importo</label>
       <div class="amount">
@@ -189,21 +196,17 @@ td.r,th.r{text-align:right}
         <select id="f-cur" data-i18n-aria="currency" aria-label="Valuta"></select>
       </div>
     </div>
+    <div class="row2">
+      <div class="field"><label class="lbl" for="f-date" data-i18n="date">Data</label><input type="date" id="f-date" required></div>
+      <div class="field"><span class="lbl" id="f-doc-l" data-i18n="doc">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="fattura" data-i18n="invoice">Fattura</button><button type="button" data-doc="scontrino" data-i18n="receipt">Scontrino</button></div></div>
+    </div>
     <div>
       <span class="lbl" id="f-cat-l" data-i18n="category">Voce del modello</span>
       <div class="chips" id="f-cats" role="group" aria-labelledby="f-cat-l"></div>
     </div>
-    <div class="row2">
-      <div class="field"><label class="lbl" for="f-date" data-i18n="date">Data</label><input type="date" id="f-date" required></div>
-      <div class="field"><label class="lbl" for="f-dest" data-i18n="dest">Destinazione</label><input id="f-dest" list="dl-dest" autocomplete="off" data-i18n-ph="destPh" placeholder="Città, cliente"></div>
-    </div>
+    <div class="field"><label class="lbl" for="f-dest" data-i18n="dest">Destinazione</label><input id="f-dest" list="dl-dest" autocomplete="off" data-i18n-ph="destPh" placeholder="Città, cliente"></div>
     <datalist id="dl-dest"></datalist>
     <div class="field"><label class="lbl" for="f-note" data-i18n="note">Nota (facoltativa)</label><input id="f-note" autocomplete="off" data-i18n-ph="notePh" placeholder="Es. pranzo con tecnico cliente"></div>
-    <div><span class="lbl" id="f-doc-l" data-i18n="doc">Documento</span><div class="seg" id="f-doc" role="group" aria-labelledby="f-doc-l"><button type="button" data-doc="fattura" data-i18n="invoice">Fattura</button><button type="button" data-doc="scontrino" data-i18n="receipt">Scontrino</button></div></div>
-    <div class="photo">
-      <div class="atts" id="f-atts"></div>
-      <label class="btn filebtn" id="f-photo-l"><span id="f-photo-t">Aggiungi foto o PDF</span><input type="file" id="f-photo" accept="image/*,application/pdf,.pdf" multiple></label>
-    </div>
     <div class="msg" id="f-msg" role="status"></div>
     <div class="confirm" id="f-confirm" hidden>
       <span data-i18n="confirmDel">Eliminare questa spesa?</span>
@@ -280,7 +283,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="33";
+const APP_VERSION="34";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -297,7 +300,7 @@ const $=s=>document.querySelector(s);
 const I18N={
 it:{settings:"Impostazioni",prevMonth:"Mese precedente",nextMonth:"Mese successivo",report:"Nota spese",add:"+ Spesa",newExp:"Nuova spesa",editExp:"Modifica spesa",close:"Chiudi",
 amount:"Importo",currency:"Valuta",category:"Voce del modello",date:"Data",dest:"Destinazione",destPh:"Città, cliente",note:"Nota (facoltativa)",notePh:"Es. pranzo con tecnico cliente",
-doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Aggiungi foto o PDF",addPage:"Aggiungi pagina",remove:"Rimuovi",page:"pag. {n}",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",
+doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Scatta foto o carica PDF",addPage:"Aggiungi pagina",remove:"Rimuovi",page:"pag. {n}",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",
 cropTitle:"Ritaglia sul foglio",cropHint:"Trascina gli angoli sui bordi del foglio.",cropDo:"Ritaglia",cropFull:"Foto intera",crop:"✂︎ Ritaglia",delete:"Elimina",save:"Salva",
 genFiles:"Genera Invoice e Receipt",zipPhotos:"Documenti (.zip)",pdfDocs:"Documenti (.pdf)",noAtt:"Nessun allegato",pdfBad:"PDF non leggibile: invialo a parte",clearMonth:"Cancella mese…",clearYes:"Cancella il mese",
 clearWarn:"Cancella dal telefono tutte le spese e gli allegati di questo mese, senza possibilità di recupero. Non serve per liberare spazio: fallo solo se vuoi davvero eliminarle.",
@@ -324,7 +327,7 @@ bkReady:"Backup pronto: salvalo su iCloud Drive.",bkErr:"Non riesco a creare il 
 imported:"Importate {n} spese{p}. Quelle già presenti sono state lasciate com'erano.",importedPh:" e {n} allegati",bkBad:"Questo file non è un backup di Expenxe."},
 en:{settings:"Settings",prevMonth:"Previous month",nextMonth:"Next month",report:"Expense report",add:"+ Expense",newExp:"New expense",editExp:"Edit expense",close:"Close",
 amount:"Amount",currency:"Currency",category:"Template category",date:"Date",dest:"Destination",destPh:"Town, company",note:"Note (optional)",notePh:"E.g. lunch with customer technician",
-doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Add photo or PDF",addPage:"Add page",remove:"Remove",page:"p. {n}",confirmDel:"Delete this expense?",cancel:"Cancel",
+doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Take photo or add PDF",addPage:"Add page",remove:"Remove",page:"p. {n}",confirmDel:"Delete this expense?",cancel:"Cancel",
 cropTitle:"Crop to the paper",cropHint:"Drag the corners onto the edges of the paper.",cropDo:"Crop",cropFull:"Whole photo",crop:"✂︎ Crop",delete:"Delete",save:"Save",
 genFiles:"Create Invoice and Receipt",zipPhotos:"Documents (.zip)",pdfDocs:"Documents (.pdf)",noAtt:"No attachment",pdfBad:"PDF cannot be read: send it separately",clearMonth:"Delete month…",clearYes:"Delete the month",
 clearWarn:"Deletes all expenses and attachments of this month from the phone, with no way to recover them. Not needed to free up space: do it only if you really want them gone.",
@@ -493,11 +496,11 @@ async function openForm(s){
   renderCats(s?s.col:null);
   const dests=[...new Set(spese.map(x=>x.dest).filter(Boolean))].slice(-30);
   $("#dl-dest").innerHTML=dests.map(d=>'<option value="'+esc(d)+'">').join("");
-  $("#f-del").hidden=!s; $("#f-confirm").hidden=true; setMsg("#f-msg","");
+  $("#f-del").hidden=!s; $("#f-confirm").hidden=true; setMsg("#f-msg",""); setMsg("#f-pmsg","");
   for(const a of formAtt){try{const b=await getFoto(a.k);if(b)a.url=URL.createObjectURL(b)}catch(_){}}
   renderAtt();
   $("#d-form").showModal();
-  if(!s)setTimeout(()=>$("#f-amt").focus(),60); else $("#f").focus({preventScroll:true});
+  $("#f").focus({preventScroll:true});
 }
 $("#b-add").onclick=()=>openForm(null);
 $("#f").addEventListener("submit",async e=>{
@@ -537,16 +540,16 @@ function renderAtt(){
       :(a.url?'<img src="'+a.url+'" alt="" data-zoom="'+i+'"><button type="button" class="cr" data-crop="'+i+'">'+esc(t("crop"))+'</button>':'<div class="pdf"><span class="ico">?</span></div>');
     return '<div class="att">'+body+tag+'<button type="button" class="rm" data-rm="'+i+'" aria-label="'+esc(t("remove"))+'">✕</button></div>';
   }).join("");
-  $("#f-photo-t").textContent=t(formAtt.length?"addPage":"photo");
+  $("#f-photo-t").textContent=t(formAtt.length?"addPage":"photo"); $("#f-photo-l").classList.toggle("primary",!formAtt.length);
 }
 $("#f-photo").addEventListener("change",async e=>{
   const files=[...e.target.files];e.target.value="";if(!files.length)return;
-  setMsg("#f-msg","");
+  setMsg("#f-pmsg","");
   for(const f of files){
-    if(formAtt.length>=8){setMsg("#f-msg",t("errMax"),"err");break}
+    if(formAtt.length>=8){setMsg("#f-pmsg",t("errMax"),"err");break}
     try{
       if(f.type==="application/pdf"||/\.pdf$/i.test(f.name)){
-        if(f.size>15e6){setMsg("#f-msg",t("errBig"),"err");continue}
+        if(f.size>15e6){setMsg("#f-pmsg",t("errBig"),"err");continue}
         const blob=new Blob([await f.arrayBuffer()],{type:"application/pdf"});
         formAtt.push({blob,type:"application/pdf",name:f.name,url:URL.createObjectURL(blob)});
       }else{
@@ -555,7 +558,7 @@ $("#f-photo").addEventListener("change",async e=>{
         formAtt.push({blob,type:"image/jpeg",name:"",url:URL.createObjectURL(blob)});
         ocrFill(blob);
       }
-    }catch(_){setMsg("#f-msg",t("errPhoto"),"err")}
+    }catch(_){setMsg("#f-pmsg",t("errPhoto"),"err")}
   }
   renderAtt();
 });
@@ -566,7 +569,7 @@ $("#f-atts").addEventListener("click",e=>{
   if(cr){(async()=>{const a=formAtt[+cr.dataset.crop];if(!a)return;
     try{const src=a.blob||await getFoto(a.k);if(!src)return;const r=await cropPhoto(src);if(!r||!r.blob)return;
       if(a.k){removedKeys.push(a.k);delete a.k}if(a.url)URL.revokeObjectURL(a.url);a.blob=r.blob;a.url=URL.createObjectURL(r.blob);renderAtt();
-    }catch(_){setMsg("#f-msg",t("errPhoto"),"err")}})();return}
+    }catch(_){setMsg("#f-pmsg",t("errPhoto"),"err")}})();return}
   const z=e.target.closest("[data-zoom]");
   if(z){$("#z-img").src=formAtt[+z.dataset.zoom].url;$("#d-img").showModal();return}
   const op=e.target.closest("[data-open]");
@@ -774,7 +777,7 @@ function parseReceipt(text){
 /* dopo una foto: legge in background e riempie solo i campi ancora vuoti o non toccati */
 async function ocrFill(blob){
   if(!cfg.ocr||editing)return;
-  const seq=formSeq;setMsg("#f-msg",t("ocrReading"));
+  const seq=formSeq;setMsg("#f-pmsg",t("ocrReading"));
   try{
     const w=await ocrWorker(),{data}=await w.recognize(blob);
     if(seq!==formSeq||!$("#d-form").open)return;
@@ -786,8 +789,8 @@ async function ocrFill(blob){
     const col=mem?mem.col:r.col;if(col&&!selectedCol()&&!HIDDEN_COLS.includes(col)){renderCats(col);mark("#f-cats","category")}
     if(mem&&mem.dest&&!fTouched.dest&&mem.dest!==$("#f-dest").value){$("#f-dest").value=mem.dest;mark("#f-dest","dest")}
     if(r.vendorPiva&&!formPiva)formPiva=r.vendorPiva;
-    setMsg("#f-msg",got.length?t("ocrFilled",{f:got.join(", ")}):t("ocrNone"),got.length?"":"warn");
-  }catch(_){if(seq===formSeq)setMsg("#f-msg",t("ocrErr"),"warn")}
+    setMsg("#f-pmsg",got.length?t("ocrFilled",{f:got.join(", ")}):t("ocrNone"),got.length?"":"warn");
+  }catch(_){if(seq===formSeq)setMsg("#f-pmsg",t("ocrErr"),"warn")}
 }
 $("#f-amt").addEventListener("input",e=>e.target.classList.remove("ocr"));
 $("#f-date").addEventListener("input",e=>{fTouched.date=true;e.target.classList.remove("ocr")});
