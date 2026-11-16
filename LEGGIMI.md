@@ -1,6 +1,6 @@
 # Expenxe
 
-Web app per segnare le spese di lavoro dal telefono e generare a fine mese il modello nota spese Estun compilato.
+Web app per segnare le spese di lavoro dal telefono e generare a fine mese la nota spese compilata sul proprio modello.
 
 ## Pubblicazione (GitHub Pages, gratis)
 
@@ -23,10 +23,13 @@ Impostazioni (⚙︎): scrivi nome e cognome, poi carica il file nota spese di u
 
 ## Ogni mese
 
-- Durante il mese: **+ Spesa** → importo, voce, Salva.
-- A fine mese: **Nota spese** → "Genera modello Estun" → invia il file.
-- Dopo l'invio: "Archivia mese" per liberare il telefono.
+- Durante il mese: **+ Spesa** → foto o PDF del documento (la lettura automatica compila i campi) → controlla → Salva.
+- Per cambiare mese: frecce ‹ ›, oppure tocca il nome del mese e scegli dall'elenco dei 12 mesi.
+- A fine mese: **Nota spese** → "Genera Invoice e Receipt" e i documenti (.zip o .pdf) → invia i file.
+- "Cancella mese" elimina definitivamente spese e allegati del mese: usalo solo dopo il backup.
+
+La guida completa è in `Expenxe installarla sull'iPhone.pdf`.
 
 ## Aggiornare l'app
 
-Dopo aver modificato i file, cambia `VERSION` in `sw.js` (es. `expenxe-3`), così i telefoni scaricano la nuova versione.
+Dopo aver modificato i file, cambia `VERSION` in `sw.js` (es. `expenxe-38`) e `APP_VERSION` in `index.html`, così i telefoni scaricano la nuova versione.
