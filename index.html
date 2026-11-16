@@ -41,7 +41,18 @@ header{position:sticky;top:0;z-index:5;background:var(--accent);color:var(--acce
 .iconbtn{background:transparent;border:0;color:inherit;font-size:1.4rem;line-height:1;padding:6px 10px;border-radius:10px;cursor:pointer}
 .iconbtn:active{background:rgba(255,255,255,.15)}
 .month{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
-.month .mlbl{font-size:1.25rem;font-weight:700;text-transform:capitalize}
+.month .mlbl{background:transparent;border:0;color:inherit;font:inherit;font-size:1.25rem;font-weight:700;text-transform:capitalize;padding:6px 10px;border-radius:10px;cursor:pointer}
+.month .mlbl::after{content:"▾";font-size:.75em;margin-left:6px;opacity:.8}
+.month .mlbl:active{background:rgba(255,255,255,.15)}
+/* scelta rapida del mese */
+.yrow{display:flex;align-items:center;justify-content:space-between}
+.yrow b{font-family:var(--f-num);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.mgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mcell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:62px;border:1px solid var(--line);background:var(--sunk);border-radius:12px;padding:10px 4px;font-weight:650;text-transform:capitalize;cursor:pointer}
+.mcell small{font-family:var(--f-num);font-weight:500;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.mcell.now{border:2px solid var(--accent)}
+.mcell[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mcell[aria-pressed="true"] small{color:var(--accent-ink)}
 .total{margin-top:2px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .total .v{font-family:var(--f-num);font-size:2rem;font-weight:600;font-variant-numeric:tabular-nums}
 .total .n{opacity:.85;font-size:.9rem}
@@ -170,7 +181,7 @@ td.r,th.r{text-align:right}
   </div>
   <div class="month">
     <button class="iconbtn" id="b-prev" data-i18n-aria="prevMonth" aria-label="Mese precedente">‹</button>
-    <span class="mlbl" id="m-lbl"></span>
+    <button class="mlbl" id="m-lbl" aria-haspopup="dialog"></button>
     <button class="iconbtn" id="b-next" data-i18n-aria="nextMonth" aria-label="Mese successivo">›</button>
   </div>
   <div class="total"><span class="v" id="m-tot">0,00</span><span class="n" id="m-n"></span></div>
@@ -183,6 +194,17 @@ td.r,th.r{text-align:right}
   <button class="btn" id="b-report" data-i18n="report">Nota spese</button>
   <button class="btn primary big" id="b-add" data-i18n="add">+ Spesa</button>
 </div>
+
+<!-- scelta rapida del mese -->
+<dialog id="d-month" aria-labelledby="mp-title">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheeth"><h2 id="mp-title" data-i18n="pickMonth">Scegli il mese</h2><button class="iconbtn" type="button" data-close data-i18n-aria="close" aria-label="Chiudi" style="color:var(--muted)">✕</button></div>
+    <div class="yrow"><button class="iconbtn" type="button" id="mp-prev" data-i18n-aria="prevYear" aria-label="Anno precedente">‹</button><b id="mp-year"></b><button class="iconbtn" type="button" id="mp-next" data-i18n-aria="nextYear" aria-label="Anno successivo">›</button></div>
+    <div class="mgrid" id="mp-grid"></div>
+    <button class="btn" type="button" id="mp-now" data-i18n="thisMonth">Mese corrente</button>
+  </div>
+</dialog>
 
 <!-- inserimento -->
 <dialog id="d-form" aria-labelledby="f-title">
@@ -288,7 +310,7 @@ td.r,th.r{text-align:right}
 <script src="jszip.min.js"></script>
 <script>
 "use strict";
-const APP_VERSION="36";
+const APP_VERSION="37";
 /* ---------- voci del modello: colonne G..U del foglio DATA ---------- */
 const COLS3=[["O","Pranzo personale","Lunch (own)"],["L","Carburante","Fuel"],["M","Pedaggi, vignetta","Motorway, vignette"],["N","Parcheggio","Parking"],["H","Hotel (camera)","Hotel (room)"],["G","Volo o treno","Flight or train"],
   ["Q","Pranzo con inviti","Lunch (invitations)"],["P","Pasto, inviti di servizio","Food & drink (service invitations)"],["S","Taxi","Taxi"],["U","Cancelleria, materiali","Office supply"],["K","Noleggio auto","Car rental"],["T","Cibo per l'ufficio","Drinks, food to office"],
@@ -303,7 +325,7 @@ const CURRENCIES=["EUR","CHF","USD","GBP","PLN","CZK","HUF","RON","SEK","DKK","N
 const $=s=>document.querySelector(s);
 /* ---------- lingua ---------- */
 const I18N={
-it:{settings:"Impostazioni",prevMonth:"Mese precedente",nextMonth:"Mese successivo",report:"Nota spese",add:"+ Spesa",newExp:"Nuova spesa",editExp:"Modifica spesa",close:"Chiudi",
+it:{settings:"Impostazioni",prevMonth:"Mese precedente",nextMonth:"Mese successivo",pickMonth:"Scegli il mese",prevYear:"Anno precedente",nextYear:"Anno successivo",thisMonth:"Mese corrente",report:"Nota spese",add:"+ Spesa",newExp:"Nuova spesa",editExp:"Modifica spesa",close:"Chiudi",
 amount:"Importo",currency:"Valuta",category:"Voce del modello",date:"Data",dest:"Destinazione",destPh:"Città, cliente",note:"Nota (facoltativa)",notePh:"Es. pranzo con tecnico cliente",
 doc:"Documento",invoice:"Fattura",receipt:"Scontrino",photo:"Scatta foto o carica PDF",addPage:"Aggiungi pagina",remove:"Rimuovi",page:"pag. {n}",confirmDel:"Eliminare questa spesa?",cancel:"Annulla",
 cropTitle:"Ritaglia sul foglio",cropHint:"Trascina gli angoli sui bordi del foglio.",cropDo:"Ritaglia",cropFull:"Foto intera",crop:"✂︎ Ritaglia",delete:"Elimina",save:"Salva",
@@ -330,7 +352,7 @@ tplLoaded:"Caricato: {n}. Ricaricalo solo se l'amministrazione cambia il modello
 tplSaved:"Modello salvato sul telefono.",tplBad:"Questo file non è il modello nota spese (manca il foglio DATA).",
 bkReady:"Backup pronto: salvalo su iCloud Drive.",bkErr:"Non riesco a creare il backup.",
 imported:"Importate {n} spese{p}. Quelle già presenti sono state lasciate com'erano.",importedPh:" e {n} allegati",bkBad:"Questo file non è un backup di Expenxe."},
-en:{settings:"Settings",prevMonth:"Previous month",nextMonth:"Next month",report:"Expense report",add:"+ Expense",newExp:"New expense",editExp:"Edit expense",close:"Close",
+en:{settings:"Settings",prevMonth:"Previous month",nextMonth:"Next month",pickMonth:"Choose month",prevYear:"Previous year",nextYear:"Next year",thisMonth:"This month",report:"Expense report",add:"+ Expense",newExp:"New expense",editExp:"Edit expense",close:"Close",
 amount:"Amount",currency:"Currency",category:"Template category",date:"Date",dest:"Destination",destPh:"Town, company",note:"Note (optional)",notePh:"E.g. lunch with customer technician",
 doc:"Document",invoice:"Invoice",receipt:"Receipt",photo:"Take photo or add PDF",addPage:"Add page",remove:"Remove",page:"p. {n}",confirmDel:"Delete this expense?",cancel:"Cancel",
 cropTitle:"Crop to the paper",cropHint:"Drag the corners onto the edges of the paper.",cropDo:"Crop",cropFull:"Whole photo",crop:"✂︎ Crop",delete:"Delete",save:"Save",
@@ -463,6 +485,21 @@ async function render(){
 $("#list").addEventListener("click",e=>{const b=e.target.closest(".item");if(b)openForm(spese.find(s=>s.id===b.dataset.id))});
 $("#b-prev").onclick=()=>{month=shiftMonth(month,-1);render()};
 $("#b-next").onclick=()=>{month=shiftMonth(month,1);render()};
+/* scelta rapida del mese: si apre toccando il nome del mese; sotto i mesi con spese c'è il totale in euro */
+let mpYear=0;
+function renderMonths(){
+  const now=todayISO().slice(0,7);$("#mp-year").textContent=mpYear;
+  $("#mp-grid").innerHTML=Array.from({length:12},(_,i)=>{
+    const m=mpYear+"-"+pad(i+1),items=monthItems(m),eur=items.filter(s=>s.currency==="EUR").reduce((t,s)=>t+s.amount,0);
+    const name=new Date(mpYear,i,1).toLocaleDateString(LOC(),{month:"short"}).replace(".","");
+    const sub=items.length?'<small>'+(eur?fmt(eur):items.length+" "+t(items.length===1?"exp1":"expN"))+'</small>':"";
+    return '<button type="button" class="mcell'+(m===now?" now":"")+'" data-m="'+m+'" aria-pressed="'+(m===month)+'">'+esc(name)+sub+'</button>'}).join("");
+}
+$("#m-lbl").onclick=()=>{mpYear=+month.slice(0,4);renderMonths();$("#d-month").showModal()};
+$("#mp-prev").onclick=()=>{mpYear--;renderMonths()};
+$("#mp-next").onclick=()=>{mpYear++;renderMonths()};
+$("#mp-grid").addEventListener("click",e=>{const c=e.target.closest(".mcell");if(!c)return;month=c.dataset.m;$("#d-month").close();render()});
+$("#mp-now").onclick=()=>{month=todayISO().slice(0,7);$("#d-month").close();render()};
 
 /* ---------- form ---------- */
 $("#f-cur").innerHTML=CURRENCIES.map(c=>'<option>'+c+'</option>').join("");
